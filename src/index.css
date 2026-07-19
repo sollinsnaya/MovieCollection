@@ -1,0 +1,61 @@
+@import '@fontsource/fraunces/500.css';
+@import '@fontsource/fraunces/600.css';
+@import '@fontsource/outfit/400.css';
+@import '@fontsource/outfit/500.css';
+@import '@fontsource/outfit/600.css';
+
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --bg: #0c0a0e;
+  --bg-elevated: #151018;
+  --text: #f4ebe0;
+  --text-muted: rgba(244, 235, 224, 0.68);
+  --accent: #d4b07a;
+  --accent-soft: #c9a46a;
+  --border: rgba(244, 235, 224, 0.12);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at top, rgba(201, 164, 106, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(90, 60, 40, 0.18), transparent 30%),
+    var(--bg);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}

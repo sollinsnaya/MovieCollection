@@ -1,0 +1,38 @@
+{
+  "name": "movie-collection",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c magenta,cyan \"npm:server\" \"npm:dev:web\"",
+    "dev:web": "vite",
+    "server": "node server/index.mjs",
+    "build": "tsc -b && vite build",
+    "start": "NODE_ENV=production node server/index.mjs",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "fetch-covers": "node scripts/fetch-covers.mjs",
+    "restart": "bash scripts/restart-dev.sh"
+  },
+  "dependencies": {
+    "@fontsource/fraunces": "^5.2.9",
+    "@fontsource/outfit": "^5.2.8",
+    "express": "^5.2.1",
+    "papaparse": "^5.5.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.13.2",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
+    "oxlint": "^1.71.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  }
+}

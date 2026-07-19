@@ -1,0 +1,119 @@
+.catalog-page__intro {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+}
+
+.catalog-page__intro h1 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.catalog-page__intro p {
+  margin: 0;
+  color: var(--text-muted);
+  max-width: 36rem;
+}
+
+.catalog-page__add {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #1a1410;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.7rem 1rem;
+}
+
+.catalog-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.catalog-page__help {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  padding: 0.7rem 1rem;
+}
+
+.catalog-page__readonly {
+  margin: -0.5rem 0 1.25rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(201, 164, 106, 0.35);
+  background: rgba(201, 164, 106, 0.08);
+  font-size: 0.92rem !important;
+  max-width: none !important;
+}
+
+.catalog-page__readonly code {
+  color: var(--accent-soft);
+}
+
+.catalog-page__layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.catalog-page__filters {
+  display: none;
+}
+
+.catalog-page__layout.is-filters-open .catalog-page__filters {
+  display: block;
+}
+
+@media (min-width: 1100px) {
+  .catalog-page__layout {
+    grid-template-columns: 280px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .catalog-page__filters {
+    display: block;
+    position: sticky;
+    top: 5.5rem;
+  }
+}
+
+.status-panel {
+  margin: 3rem auto;
+  max-width: 36rem;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.status-panel--error {
+  border-color: rgba(196, 92, 92, 0.55);
+}
+
+.status-panel h1 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+.status-panel p {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+}
+
+.status-panel__hint code {
+  color: var(--accent-soft);
+  font-size: 0.9em;
+}
