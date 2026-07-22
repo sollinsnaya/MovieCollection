@@ -4,17 +4,18 @@ import './MovieForm.css'
 /** Fields shown first when adding/editing. Remaining columns appear under “More fields”. */
 export const FEATURED_FIELDS = [
   'Title',
-  'Sort Title',
   'Year',
   'Director',
+  'Genre',
   'Disc Format',
   'Edition',
+  'Steelbook',
   'Studio/Distributor',
   'Boutique Label',
-  'Franchise/Collection',
+  'Franchise',
   'Runtime (min)',
-  'Spoiler-Free Plot Summary',
-  'Notes',
+  'Spoiler Free Summary',
+  'Rotten Tomatoes Critic Score',
 ] as const
 
 type MovieFormProps = {
@@ -91,7 +92,7 @@ export function MovieForm({
           key={field}
           label={field}
           value={values[field] ?? ''}
-          multiline={field === 'Spoiler-Free Plot Summary' || field === 'Notes'}
+          multiline={field === 'Spoiler Free Summary'}
           onChange={(value) => onChange(field, value)}
         />
       ))}

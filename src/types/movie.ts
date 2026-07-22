@@ -13,6 +13,7 @@ export type Movie = {
   edition: string
   boutiqueLabel: string
   franchiseCollection: string
+  genre: string
   lastUpdated: string | null
   runtimeMinutes: number | null
   plotSummary: string

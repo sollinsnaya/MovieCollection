@@ -14,7 +14,7 @@ import {
   fetchCollection,
   updateMovie as apiUpdateMovie,
 } from '../lib/api'
-import { loadMoviesFromCsv, toMovie } from '../lib/spreadsheet'
+import { loadMoviesFromSpreadsheet, toMovie } from '../lib/spreadsheet'
 import type { Movie, MovieRecord } from '../types/movie'
 
 type MoviesContextValue = {
@@ -23,7 +23,7 @@ type MoviesContextValue = {
   movies: Movie[]
   columns: string[]
   canEdit: boolean
-  csvPath: string | null
+  collectionPath: string | null
   reload: () => Promise<void>
   createMovie: (fields: MovieRecord) => Promise<Movie>
   updateMovie: (catalogId: string, fields: MovieRecord) => Promise<Movie>
@@ -38,7 +38,7 @@ export function MoviesProvider({ children }: { children: ReactNode }) {
   const [movies, setMovies] = useState<Movie[]>([])
   const [columns, setColumns] = useState<string[]>([])
   const [canEdit, setCanEdit] = useState(false)
-  const [csvPath, setCsvPath] = useState<string | null>(null)
+  const [collectionPath, setCollectionPath] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
     setStatus('loading')
@@ -51,7 +51,7 @@ export function MoviesProvider({ children }: { children: ReactNode }) {
         try {
           const payload = await fetchCollection()
           setColumns(payload.columns)
-          setCsvPath(payload.csvPath ?? null)
+          setCollectionPath(payload.collectionPath ?? payload.csvPath ?? null)
           setMovies(
             payload.rows
               .map(toMovie)
@@ -64,10 +64,10 @@ export function MoviesProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const loaded = await loadMoviesFromCsv()
+      const loaded = await loadMoviesFromSpreadsheet()
       setMovies(loaded)
       setColumns(loaded[0] ? Object.keys(loaded[0].fields) : [])
-      setCsvPath(null)
+      setCollectionPath(null)
       setStatus('ready')
     } catch (error: unknown) {
       setStatus('error')
@@ -108,7 +108,7 @@ export function MoviesProvider({ children }: { children: ReactNode }) {
       movies,
       columns,
       canEdit,
-      csvPath,
+      collectionPath,
       reload,
       createMovie,
       updateMovie,
@@ -120,7 +120,7 @@ export function MoviesProvider({ children }: { children: ReactNode }) {
       movies,
       columns,
       canEdit,
-      csvPath,
+      collectionPath,
       reload,
       createMovie,
       updateMovie,

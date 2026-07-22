@@ -82,6 +82,15 @@ export function FilterPanel({ movies, filters, onChange }: FilterPanelProps) {
       />
 
       <FilterGroup
+        title="Genre"
+        options={options.genres}
+        selected={filters.genres}
+        onToggle={(value) =>
+          onChange({ ...filters, genres: toggleValue(filters.genres, value) })
+        }
+      />
+
+      <FilterGroup
         title="Edition"
         options={options.editions}
         selected={filters.editions}
@@ -100,7 +109,7 @@ export function FilterPanel({ movies, filters, onChange }: FilterPanelProps) {
       />
 
       <FilterGroup
-        title="Franchise / collection"
+        title="Franchise"
         options={options.franchises}
         selected={filters.franchises}
         onToggle={(value) =>
@@ -132,8 +141,7 @@ export function FilterPanel({ movies, filters, onChange }: FilterPanelProps) {
       />
 
       <p className="filter-panel__note">
-        Genre is not in the spreadsheet yet, so there is no genre filter. Moods are stored
-        locally in this browser.
+        Moods are stored locally in this browser and are not part of the spreadsheet.
       </p>
     </aside>
   )

@@ -6,7 +6,7 @@ import './AddMoviePage.css'
 
 export function AddMoviePage() {
   const navigate = useNavigate()
-  const { status, message, columns, canEdit, createMovie, csvPath } = useMoviesContext()
+  const { status, message, columns, canEdit, createMovie, collectionPath } = useMoviesContext()
   const [values, setValues] = useState(() => blankFields(columns))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -67,10 +67,10 @@ export function AddMoviePage() {
       <header className="add-movie-page__intro">
         <h1>Add a movie</h1>
         <p>
-          New rows are saved to <code>Movie_Collection_Master_Current.csv</code> in this project.
+          New rows are saved to <code>Master Film List.xlsx</code> in this project.
           Catalog ID is created automatically if you leave it blank.
         </p>
-        {csvPath ? <p className="add-movie-page__path">{csvPath}</p> : null}
+        {collectionPath ? <p className="add-movie-page__path">{collectionPath}</p> : null}
       </header>
 
       <form className="add-movie-page__form" onSubmit={onSubmit}>

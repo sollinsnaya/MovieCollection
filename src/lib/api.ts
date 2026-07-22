@@ -3,6 +3,8 @@ import type { MovieRecord } from '../types/movie'
 export type CollectionPayload = {
   columns: string[]
   rows: MovieRecord[]
+  collectionPath?: string
+  /** @deprecated Prefer collectionPath */
   csvPath?: string
 }
 

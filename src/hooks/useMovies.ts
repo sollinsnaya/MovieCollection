@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { loadMoviesFromCsv } from '../lib/spreadsheet'
+import { loadMoviesFromSpreadsheet } from '../lib/spreadsheet'
 import type { Movie } from '../types/movie'
 
 type MoviesState =
@@ -13,7 +13,7 @@ export function useMovies(): MoviesState {
   useEffect(() => {
     let cancelled = false
 
-    loadMoviesFromCsv()
+    loadMoviesFromSpreadsheet()
       .then((movies) => {
         if (!cancelled) setState({ status: 'ready', movies })
       })

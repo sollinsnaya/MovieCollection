@@ -16,10 +16,10 @@ export function HelpPage() {
         <p>
           The master list is the spreadsheet in this project folder:
         </p>
-        <pre>Movie_Collection_Master_Current.csv</pre>
+        <pre>Master Film List.xlsx</pre>
         <p>
-          The app reads and saves that file. When you commit the project to git, include this CSV so
-          the collection travels with the code.
+          The app reads and saves that file. When you commit the project to git, include this
+          spreadsheet so the collection travels with the code.
         </p>
       </section>
 
@@ -46,7 +46,7 @@ export function HelpPage() {
           </li>
         </ol>
         <p className="help-page__callout">
-          Saves update <code>Movie_Collection_Master_Current.csv</code> in the project folder.
+          Saves update <code>Master Film List.xlsx</code> in the project folder.
         </p>
       </section>
 

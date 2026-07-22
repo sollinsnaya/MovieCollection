@@ -1,17 +1,17 @@
 # Shelf — Physical Media Library
 
-A local web app for browsing a physical movie collection (DVD, Blu-ray, UHD 4K) from a CSV spreadsheet.
+A local web app for browsing a physical movie collection (DVD, Blu-ray, UHD 4K) from an Excel spreadsheet.
 
 For architecture, module boundaries, and Mermaid diagrams, see **[docs/DESIGN.md](docs/DESIGN.md)**.  
 For a plain-language how-to inside the running app, open the **Help** page.
 
 ## Features
 
-- Loads `Movie_Collection_Master_Current.csv` (project root) as the source of truth
+- Loads `Master Film List.xlsx` (project root) as the source of truth
 - Responsive card catalog with cover placeholders
-- Search by title (also matches director, format, edition)
+- Search by title (also matches director, format, edition, genre)
 - Sort by title, year, or recently added
-- Filters: format, edition, studio, franchise/collection, boutique label, mood
+- Filters: format, genre, edition, studio, franchise, boutique label, mood
 - Browse-by-category page
 - Movie detail page with every spreadsheet field
 - Local mood tags (persist in the browser via `localStorage`)
@@ -21,9 +21,9 @@ For a plain-language how-to inside the running app, open the **Help** page.
 
 ### Spreadsheet notes
 
-- There is no Genre column yet, so genre filtering is unavailable.
-- Boutique Label / Country / Cut are currently empty in the sheet.
-- Long verification notes in Franchise/Collection are excluded from browse/filter options.
+- Genre comes from the `Genre` column and is available in filters and Browse.
+- Boutique Label is often empty in the sheet.
+- Long verification-style Franchise values are excluded from browse/filter options.
 
 ## Requirements
 
@@ -39,10 +39,10 @@ npm install
 The collection spreadsheet lives at the project root:
 
 ```text
-Movie_Collection_Master_Current.csv
+Master Film List.xlsx
 ```
 
-Commit this file with the repo so the collection stays with the code.
+Keep this file with the project so the collection stays with the code.
 
 ## Run locally
 
@@ -52,11 +52,11 @@ npm run dev
 
 This starts both:
 - the website (Vite) at `http://127.0.0.1:5173/`
-- a small local API that reads/writes the root CSV
+- a small local API that reads/writes the root spreadsheet
 
 Prefer **http://127.0.0.1:5173/** over `localhost` on macOS.
 
-Use **Add** to create titles and **Edit spreadsheet row** on a movie page to change fields. Saves update the root CSV.
+Use **Add** to create titles and **Edit spreadsheet row** on a movie page to change fields. Saves update the root Excel file.
 
 ## Deploy on a Fedora home server
 
@@ -100,10 +100,10 @@ See `public/covers/README.md`.
 
 | Path | Role |
 | --- | --- |
-| `Movie_Collection_Master_Current.csv` | Source-of-truth collection spreadsheet |
-| `server/` | Local API that reads/writes the CSV |
+| `Master Film List.xlsx` | Source-of-truth collection spreadsheet |
+| `server/` | Local API that reads/writes the spreadsheet |
 | `docs/DESIGN.md` | Architecture & design (with Mermaid diagrams) |
-| `src/lib/spreadsheet.ts` | Client CSV parsing helpers |
+| `src/lib/spreadsheet.ts` | Client spreadsheet parsing helpers |
 | `src/lib/normalize.ts` | Year/runtime cleanup |
 | `src/lib/search.ts` | Search |
 | `src/lib/sort.ts` | Sorting |

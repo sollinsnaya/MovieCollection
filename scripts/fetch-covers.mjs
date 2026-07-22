@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Download TMDb posters for each title in the collection CSV.
+ * Download TMDb posters for each title in the collection spreadsheet.
  *
  * Usage:
  *   1. Copy .env.example → .env and set TMDB_API_KEY
@@ -17,11 +17,11 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pipeline } from 'node:stream/promises'
 import { Readable } from 'node:stream'
-import Papa from 'papaparse'
+import * as XLSX from 'xlsx'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
-const CSV_PATH = join(ROOT, 'Movie_Collection_Master_Current.csv')
+const COLLECTION_PATH = join(ROOT, 'Master Film List.xlsx')
 const COVERS_DIR = join(ROOT, 'public/covers')
 const REPORT_PATH = join(COVERS_DIR, 'fetch-report.json')
 const TMDB_SEARCH = 'https://api.themoviedb.org/3/search/movie'
@@ -209,23 +209,30 @@ async function downloadPoster(posterPath, destPath) {
 }
 
 function loadMovies() {
-  if (!existsSync(CSV_PATH)) {
-    throw new Error(`CSV not found: ${CSV_PATH}`)
+  if (!existsSync(COLLECTION_PATH)) {
+    throw new Error(`Spreadsheet not found: ${COLLECTION_PATH}`)
   }
-  const csvText = readFileSync(CSV_PATH, 'utf8')
-  const parsed = Papa.parse(csvText, {
-    header: true,
-    skipEmptyLines: true,
-    transformHeader: (header) => header.trim(),
+  const workbook = XLSX.read(readFileSync(COLLECTION_PATH), {
+    type: 'buffer',
+    cellDates: true,
   })
-  if (parsed.errors.length > 0) {
-    throw new Error(`CSV parse error: ${parsed.errors[0].message}`)
-  }
-  return parsed.data.map((row) => ({
-    catalogId: String(row['Catalog ID'] ?? '').trim(),
-    title: String(row.Title ?? '').trim(),
-    year: parseYear(row.Year),
-  })).filter((row) => row.catalogId && row.title)
+  const sheetName = workbook.SheetNames.includes('Master Collection')
+    ? 'Master Collection'
+    : workbook.SheetNames[0]
+  if (!sheetName) throw new Error('Workbook has no sheets.')
+
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+    defval: '',
+    raw: false,
+  })
+
+  return rows
+    .map((row) => ({
+      catalogId: String(row['Catalog ID'] ?? '').trim(),
+      title: String(row.Title ?? '').trim(),
+      year: parseYear(row.Year),
+    }))
+    .filter((row) => row.catalogId && row.title)
 }
 
 async function main() {

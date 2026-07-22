@@ -5,35 +5,38 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
 const rootDir = dirname(fileURLToPath(import.meta.url))
-const COLLECTION_CSV = 'Movie_Collection_Master_Current.csv'
-const collectionCsvPath = resolve(rootDir, COLLECTION_CSV)
-const collectionCsvUrl = `/data/${COLLECTION_CSV}`
+const COLLECTION_FILE = 'Master Film List.xlsx'
+const collectionPath = resolve(rootDir, COLLECTION_FILE)
+const collectionUrl = `/data/${encodeURI(COLLECTION_FILE)}`
 
 /** Serve the repo-root spreadsheet at /data/... during `vite` dev. */
-function collectionCsvPlugin(): Plugin {
+function collectionSpreadsheetPlugin(): Plugin {
   return {
-    name: 'collection-csv',
+    name: 'collection-spreadsheet',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = req.url?.split('?')[0]
-        if (url !== collectionCsvUrl) {
+        if (url !== collectionUrl && url !== `/data/${COLLECTION_FILE}`) {
           next()
           return
         }
-        if (!existsSync(collectionCsvPath)) {
+        if (!existsSync(collectionPath)) {
           res.statusCode = 404
-          res.end(`Collection CSV not found at ${collectionCsvPath}`)
+          res.end(`Collection spreadsheet not found at ${collectionPath}`)
           return
         }
-        res.setHeader('Content-Type', 'text/csv; charset=utf-8')
-        createReadStream(collectionCsvPath).pipe(res)
+        res.setHeader(
+          'Content-Type',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        createReadStream(collectionPath).pipe(res)
       })
     },
     writeBundle(outputOptions) {
       const outDir = outputOptions.dir ?? resolve(rootDir, 'dist')
       const targetDir = resolve(outDir, 'data')
       mkdirSync(targetDir, { recursive: true })
-      copyFileSync(collectionCsvPath, resolve(targetDir, COLLECTION_CSV))
+      copyFileSync(collectionPath, resolve(targetDir, COLLECTION_FILE))
     },
   }
 }
@@ -43,7 +46,7 @@ const devPort = Number(process.env.SHELF_DEV_PORT || 5173)
 const apiPort = Number(process.env.SHELF_API_PORT || 5188)
 
 export default defineConfig({
-  plugins: [react(), collectionCsvPlugin()],
+  plugins: [react(), collectionSpreadsheetPlugin()],
   server: {
     host: devHost,
     port: devPort,

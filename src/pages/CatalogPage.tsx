@@ -29,6 +29,7 @@ function filtersFromParams(params: URLSearchParams): CatalogFilters {
     boutiques: readList(params, 'boutique'),
     franchises: readList(params, 'franchise'),
     studios: readList(params, 'studio'),
+    genres: readList(params, 'genre'),
     moods,
   }
 }
@@ -42,6 +43,7 @@ function paramsFromFilters(filters: CatalogFilters, query: string, sort: SortOpt
   for (const boutique of filters.boutiques) params.append('boutique', boutique)
   for (const franchise of filters.franchises) params.append('franchise', franchise)
   for (const studio of filters.studios) params.append('studio', studio)
+  for (const genre of filters.genres) params.append('genre', genre)
   for (const mood of filters.moods) params.append('mood', mood)
   return params
 }
@@ -85,8 +87,7 @@ export function CatalogPage() {
         <h1>Could not load collection</h1>
         <p>{state.message}</p>
         <p className="status-panel__hint">
-          Place the CSV at <code>Movie_Collection_Master_Current.csv</code> in the project root and
-          refresh.
+          Place <code>Master Film List.xlsx</code> in the project root and refresh.
         </p>
       </div>
     )

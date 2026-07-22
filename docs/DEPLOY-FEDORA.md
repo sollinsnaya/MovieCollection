@@ -17,7 +17,7 @@ npm run build
 ```
 
 Copy `.env` if you use TMDb cover fetching (`TMDB_API_KEY=...`).  
-Keep `Movie_Collection_Master_Current.csv` and `public/covers/` on the server (or commit them).
+Keep `Master Film List.xlsx` and `public/covers/` on the server (or commit them).
 
 ## Run for the household
 

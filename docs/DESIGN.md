@@ -25,7 +25,7 @@ Shelf is a **local-only** web app for browsing a physical movie collection (DVD,
 ```mermaid
 flowchart TB
   subgraph Sources["Source data"]
-    AppCSV["Movie_Collection_Master_Current.csv<br/>project root"]
+    AppCSV["Master Film List.xlsx<br/>project root"]
     Covers["Local posters<br/>public/covers/"]
     TMDb["TMDb API<br/>(optional)"]
     BrowserStore["Browser localStorage<br/>mood assignments"]
@@ -138,12 +138,12 @@ flowchart LR
 
 ## Editing the spreadsheet from the app
 
-A small local Express API (`server/`) reads and writes `Movie_Collection_Master_Current.csv` at the project root.
+A small local Express API (`server/`) reads and writes `Master Film List.xlsx` at the project root.
 
 ```mermaid
 flowchart LR
   UI["Add / Edit pages"] --> API["Shelf API :5188"]
-  API --> AppCSV["Movie_Collection_Master_Current.csv"]
+  API --> AppCSV["Master Film List.xlsx"]
   Vite["Vite :5173"] -->|proxy /api| API
 ```
 
@@ -157,7 +157,7 @@ flowchart LR
 
 | Concern | Link key | Location |
 | --- | --- | --- |
-| Movie record | `Catalog ID` (e.g. `MC-0001`) plus spreadsheet columns | `Movie_Collection_Master_Current.csv` (project root) |
+| Movie record | `Catalog ID` (e.g. `MC-0001`) plus spreadsheet columns | `Master Film List.xlsx` (project root) |
 | Cover image (preferred) | `Title (Year).jpg` | `public/covers/Alien (1979).jpg` |
 | Cover image (fallback) | `Catalog ID.jpg` | `public/covers/MC-0001.jpg` |
 | Moods | `Catalog ID` → list of mood labels | Browser `localStorage` key `shelf-moods-v1` |
@@ -166,21 +166,22 @@ The UI never downloads posters itself. It only looks for files already present u
 
 ## Spreadsheet normalization
 
-The CSV columns are preserved as-is for the detail page. Derived display fields clean up common spreadsheet quirks:
+The spreadsheet columns are preserved as-is for the detail page. Derived display fields clean up common spreadsheet quirks:
 
 | Field | Normalization |
 | --- | --- |
 | Year | `"2019.0"` → `2019` |
-| Runtime | Prefer researched runtime when present |
-| Director | Prefer verified/researched director when present |
+| Runtime | Prefer researched runtime when present (legacy sheets) |
+| Director | Prefer verified/researched director when present (legacy sheets) |
 | Disc format | Split on `/` for filters (e.g. `UHD 4K / Blu-ray`) |
-| Franchise/Collection | Long verification notes excluded from browse/filter chips |
+| Franchise | Long verification notes excluded from browse/filter chips |
+| Genre | Exact `Genre` cell values used for filters and Browse |
 | Empty cells | Shown as `—` in the UI |
 
 ## User-facing screens
 
 1. **Collection** — searchable, sortable, filterable card grid  
-2. **Browse** — jump in by format, studio, edition, franchise, boutique, or mood  
+2. **Browse** — jump in by format, genre, studio, edition, franchise, boutique, or mood  
 3. **Movie detail** — full spreadsheet fields + mood picker  
 4. **Help** — plain-language guide for adding movies and updating covers  
 

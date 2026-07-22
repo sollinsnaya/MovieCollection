@@ -13,6 +13,7 @@ export function searchMovies(movies: Movie[], query: string): Movie[] {
       movie.edition,
       movie.discFormat,
       movie.franchiseCollection,
+      movie.genre,
     ]
       .join(' ')
       .toLowerCase()

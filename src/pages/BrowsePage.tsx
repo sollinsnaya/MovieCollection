@@ -9,6 +9,7 @@ import './BrowsePage.css'
 
 const CATEGORIES: Array<{ id: BrowseCategory; label: string; blurb: string }> = [
   { id: 'format', label: 'Format', blurb: 'DVD, Blu-ray, UHD 4K, and combinations' },
+  { id: 'genre', label: 'Genre', blurb: 'Genre labels from the spreadsheet' },
   { id: 'studio', label: 'Studio', blurb: 'Distributor / studio labels from the sheet' },
   { id: 'edition', label: 'Edition', blurb: 'Steelbook, collector editions, and more' },
   { id: 'franchise', label: 'Franchise', blurb: 'Short franchise or collection labels' },
@@ -20,6 +21,8 @@ function categoryQueryParam(category: BrowseCategory): string {
   switch (category) {
     case 'format':
       return 'format'
+    case 'genre':
+      return 'genre'
     case 'studio':
       return 'studio'
     case 'edition':

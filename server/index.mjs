@@ -3,7 +3,8 @@ import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
-  CSV_PATH,
+  COLLECTION_FILE_NAME,
+  COLLECTION_PATH,
   emptyRow,
   nextCatalogId,
   readCollection,
@@ -30,7 +31,8 @@ app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
     service: 'shelf-api',
-    csvPath: CSV_PATH,
+    collectionPath: COLLECTION_PATH,
+    csvPath: COLLECTION_PATH,
     mode: isProduction ? 'production' : 'development',
   })
 })
@@ -41,7 +43,8 @@ app.get('/api/movies', (_req, res) => {
     res.json({
       columns,
       rows,
-      csvPath: CSV_PATH,
+      collectionPath: COLLECTION_PATH,
+      csvPath: COLLECTION_PATH,
     })
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : String(error) })
@@ -56,7 +59,7 @@ app.post('/api/movies', (req, res) => {
       return
     }
 
-    const { columns, rows } = readCollection()
+    const { columns, rows, sheetName } = readCollection()
     const row = emptyRow(columns)
 
     for (const column of columns) {
@@ -80,11 +83,15 @@ app.post('/api/movies', (req, res) => {
       return
     }
 
-    if (!row['Sort Title']) row['Sort Title'] = row.Title
-    if (!row['Last Updated']) row['Last Updated'] = todayStamp()
+    if (columns.includes('Sort Title') && !row['Sort Title']) {
+      row['Sort Title'] = row.Title
+    }
+    if (columns.includes('Last Updated') && !row['Last Updated']) {
+      row['Last Updated'] = todayStamp()
+    }
 
     rows.push(row)
-    const write = writeCollection(columns, rows)
+    const write = writeCollection(columns, rows, sheetName)
     res.status(201).json({ row, ...write })
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : String(error) })
@@ -100,7 +107,7 @@ app.put('/api/movies/:catalogId', (req, res) => {
       return
     }
 
-    const { columns, rows } = readCollection()
+    const { columns, rows, sheetName } = readCollection()
     const index = rows.findIndex((row) => row['Catalog ID'] === catalogId)
     if (index === -1) {
       res.status(404).json({ error: `Movie ${catalogId} not found.` })
@@ -120,9 +127,11 @@ app.put('/api/movies/:catalogId', (req, res) => {
       return
     }
 
-    row['Last Updated'] = todayStamp()
+    if (columns.includes('Last Updated')) {
+      row['Last Updated'] = todayStamp()
+    }
     rows[index] = row
-    const write = writeCollection(columns, rows)
+    const write = writeCollection(columns, rows, sheetName)
     res.json({ row, ...write })
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : String(error) })
@@ -132,13 +141,13 @@ app.put('/api/movies/:catalogId', (req, res) => {
 app.delete('/api/movies/:catalogId', (req, res) => {
   try {
     const catalogId = decodeURIComponent(req.params.catalogId)
-    const { columns, rows } = readCollection()
+    const { columns, rows, sheetName } = readCollection()
     const nextRows = rows.filter((row) => row['Catalog ID'] !== catalogId)
     if (nextRows.length === rows.length) {
       res.status(404).json({ error: `Movie ${catalogId} not found.` })
       return
     }
-    const write = writeCollection(columns, nextRows)
+    const write = writeCollection(columns, nextRows, sheetName)
     res.json({ deleted: catalogId, ...write })
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : String(error) })
@@ -146,12 +155,12 @@ app.delete('/api/movies/:catalogId', (req, res) => {
 })
 
 /** Always serve the repo-root spreadsheet (not a stale dist copy). */
-app.get('/data/Movie_Collection_Master_Current.csv', (_req, res) => {
-  if (!existsSync(CSV_PATH)) {
-    res.status(404).type('text/plain').send(`Collection CSV not found at ${CSV_PATH}`)
+app.get(`/data/${COLLECTION_FILE_NAME}`, (_req, res) => {
+  if (!existsSync(COLLECTION_PATH)) {
+    res.status(404).type('text/plain').send(`Collection spreadsheet not found at ${COLLECTION_PATH}`)
     return
   }
-  res.type('text/csv').sendFile(CSV_PATH)
+  res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').sendFile(COLLECTION_PATH)
 })
 
 if (isProduction) {
@@ -182,5 +191,5 @@ app.listen(PORT, HOST, () => {
   const where = HOST === '0.0.0.0' ? `http://<server-ip>:${PORT}` : `http://${HOST}:${PORT}`
   console.log(`Shelf listening on ${HOST}:${PORT} (${isProduction ? 'production' : 'api-only'})`)
   console.log(`Open: ${where}`)
-  console.log(`Collection CSV: ${CSV_PATH}`)
+  console.log(`Collection spreadsheet: ${COLLECTION_PATH}`)
 })

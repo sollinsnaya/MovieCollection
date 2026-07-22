@@ -7,6 +7,7 @@ export type CatalogFilters = {
   boutiques: string[]
   franchises: string[]
   studios: string[]
+  genres: string[]
   moods: Mood[]
 }
 
@@ -16,6 +17,7 @@ export const EMPTY_FILTERS: CatalogFilters = {
   boutiques: [],
   franchises: [],
   studios: [],
+  genres: [],
   moods: [],
 }
 
@@ -29,7 +31,7 @@ export function splitFormats(discFormat: string): string[] {
 }
 
 /**
- * Franchise/Collection currently mixes real franchise names with verification notes.
+ * Franchise currently mixes real franchise names with verification notes.
  * Keep short, label-like values for browsing/filters.
  */
 export function isBrowseableFranchise(value: string): boolean {
@@ -51,6 +53,14 @@ export function uniqueSorted(values: string[]): string[] {
   )
 }
 
+export function studioLabel(movie: Movie): string {
+  return (
+    movie.fields['Studio/Distributor – researched'] ||
+    movie.fields['Studio/Distributor'] ||
+    ''
+  )
+}
+
 export function collectFilterOptions(movies: Movie[]) {
   const formats = uniqueSorted(movies.flatMap((movie) => splitFormats(movie.discFormat)))
   const editions = uniqueSorted(movies.map((movie) => movie.edition).filter(Boolean))
@@ -60,13 +70,10 @@ export function collectFilterOptions(movies: Movie[]) {
       .map((movie) => movie.franchiseCollection)
       .filter((value) => isBrowseableFranchise(value)),
   )
-  const studios = uniqueSorted(
-    movies
-      .map((movie) => movie.fields['Studio/Distributor – researched'] || movie.fields['Studio/Distributor'] || '')
-      .filter(Boolean),
-  )
+  const studios = uniqueSorted(movies.map((movie) => studioLabel(movie)).filter(Boolean))
+  const genres = uniqueSorted(movies.map((movie) => movie.genre).filter(Boolean))
 
-  return { formats, editions, boutiques, franchises, studios }
+  return { formats, editions, boutiques, franchises, studios, genres }
 }
 
 export function hasActiveFilters(filters: CatalogFilters): boolean {
@@ -76,6 +83,7 @@ export function hasActiveFilters(filters: CatalogFilters): boolean {
     filters.boutiques.length > 0 ||
     filters.franchises.length > 0 ||
     filters.studios.length > 0 ||
+    filters.genres.length > 0 ||
     filters.moods.length > 0
   )
 }
@@ -87,6 +95,7 @@ export function activeFilterCount(filters: CatalogFilters): number {
     filters.boutiques.length +
     filters.franchises.length +
     filters.studios.length +
+    filters.genres.length +
     filters.moods.length
   )
 }
@@ -117,11 +126,11 @@ export function filterMovies({ movies, filters, moodMap }: FilterMoviesArgs): Mo
     }
 
     if (filters.studios.length > 0) {
-      const studio =
-        movie.fields['Studio/Distributor – researched'] ||
-        movie.fields['Studio/Distributor'] ||
-        ''
-      if (!filters.studios.includes(studio)) return false
+      if (!filters.studios.includes(studioLabel(movie))) return false
+    }
+
+    if (filters.genres.length > 0) {
+      if (!filters.genres.includes(movie.genre)) return false
     }
 
     if (filters.moods.length > 0) {
@@ -138,6 +147,7 @@ export type BrowseCategory =
   | 'studio'
   | 'edition'
   | 'franchise'
+  | 'genre'
   | 'mood'
   | 'boutique'
 
@@ -165,11 +175,7 @@ export function buildBrowseGroups(
         for (const format of splitFormats(movie.discFormat)) bump(format)
         break
       case 'studio':
-        bump(
-          movie.fields['Studio/Distributor – researched'] ||
-            movie.fields['Studio/Distributor'] ||
-            '',
-        )
+        bump(studioLabel(movie))
         break
       case 'edition':
         bump(movie.edition)
@@ -178,6 +184,9 @@ export function buildBrowseGroups(
         if (isBrowseableFranchise(movie.franchiseCollection)) {
           bump(movie.franchiseCollection)
         }
+        break
+      case 'genre':
+        bump(movie.genre)
         break
       case 'boutique':
         bump(movie.boutiqueLabel)
@@ -197,7 +206,16 @@ export function filtersFromBrowse(
   category: BrowseCategory,
   value: string,
 ): CatalogFilters {
-  const filters = { ...EMPTY_FILTERS, formats: [], editions: [], boutiques: [], franchises: [], studios: [], moods: [] as Mood[] }
+  const filters = {
+    ...EMPTY_FILTERS,
+    formats: [] as string[],
+    editions: [] as string[],
+    boutiques: [] as string[],
+    franchises: [] as string[],
+    studios: [] as string[],
+    genres: [] as string[],
+    moods: [] as Mood[],
+  }
 
   switch (category) {
     case 'format':
@@ -210,6 +228,8 @@ export function filtersFromBrowse(
       return { ...filters, franchises: [value] }
     case 'studio':
       return { ...filters, studios: [value] }
+    case 'genre':
+      return { ...filters, genres: [value] }
     case 'mood':
       return { ...filters, moods: [value as Mood] }
   }
