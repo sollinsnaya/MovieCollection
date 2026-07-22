@@ -1,19 +1,224 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { blankFields, MovieForm } from '../components/MovieForm'
+import { TmdbResultPicker } from '../components/TmdbResultPicker'
 import { useMoviesContext } from '../context/MoviesContext'
+import { coverCandidates } from '../lib/covers'
+import { parseYear } from '../lib/normalize'
+import {
+  downloadTmdbPoster,
+  fetchTmdbMovie,
+  findDuplicates,
+  searchTmdb,
+} from '../lib/tmdbApi'
+import type { MovieRecord } from '../types/movie'
+import type { DuplicateCandidate, TmdbSearchResult } from '../types/tmdb'
 import './AddMoviePage.css'
+
+const MANUAL_FIELDS = new Set([
+  'Catalog ID',
+  'Edition',
+  'Steelbook',
+  'Disc Format',
+  'HDR10',
+  'HDR10+',
+  'Dolby Vision',
+  'Dolby Atmos',
+  'Dolby True HD',
+  'DTS:X',
+  'DTS-HD  MA',
+  '7.1',
+  '5.1',
+  'Boutique Label',
+  'Rotten Tomatoes Critic Score',
+  'Notes',
+  'Wikipedia Link',
+])
+
+function applyTmdbFields(current: MovieRecord, mapped: Record<string, string>): MovieRecord {
+  const next = { ...current }
+  for (const [key, value] of Object.entries(mapped)) {
+    if (MANUAL_FIELDS.has(key)) continue
+    next[key] = value
+  }
+  // Always preserve manual cells from the form as-is.
+  for (const key of MANUAL_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(current, key)) {
+      next[key] = current[key]
+    }
+  }
+  return next
+}
 
 export function AddMoviePage() {
   const navigate = useNavigate()
-  const { status, message, columns, canEdit, createMovie, collectionPath } = useMoviesContext()
+  const { status, message, columns, canEdit, createMovie, collectionPath, reload } =
+    useMoviesContext()
   const [values, setValues] = useState(() => blankFields(columns))
+  const [lookupTitle, setLookupTitle] = useState('')
+  const [lookupYear, setLookupYear] = useState('')
+  const [lookupTmdbId, setLookupTmdbId] = useState('')
   const [saving, setSaving] = useState(false)
+  const [fetchPhase, setFetchPhase] = useState<'idle' | 'search' | 'details' | 'poster'>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [warnings, setWarnings] = useState<string[]>([])
+  const [fromTmdb, setFromTmdb] = useState(false)
+  const [selectedTmdbId, setSelectedTmdbId] = useState<number | null>(null)
+  const [posterUrl, setPosterUrl] = useState<string | null>(null)
+  const [posterNote, setPosterNote] = useState<string | null>(null)
+  const [pickerResults, setPickerResults] = useState<TmdbSearchResult[] | null>(null)
+  const [pickerMessage, setPickerMessage] = useState<string | undefined>()
+  const [duplicates, setDuplicates] = useState<DuplicateCandidate[] | null>(null)
+  const [allowDuplicateSave, setAllowDuplicateSave] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
 
   useEffect(() => {
     setValues(blankFields(columns))
   }, [columns])
+
+  const busy = fetchPhase !== 'idle' || saving
+
+  async function loadDetails(tmdbId: number, forcePoster = false) {
+    setFetchPhase('details')
+    setStatusMessage('Loading TMDb details…')
+    setError(null)
+    try {
+      const payload = await fetchTmdbMovie(tmdbId, {
+        downloadPoster: true,
+        forcePoster,
+      })
+      setFetchPhase(payload.poster?.downloaded ? 'poster' : 'details')
+      setValues((current) => applyTmdbFields(current, payload.fields))
+      setLookupTitle(payload.fields.Title || lookupTitle)
+      if (payload.fields.Year) setLookupYear(payload.fields.Year)
+      setLookupTmdbId(String(tmdbId))
+      setSelectedTmdbId(tmdbId)
+      setFromTmdb(true)
+      setWarnings(payload.warnings ?? [])
+      setAllowDuplicateSave(false)
+      setDuplicates(null)
+
+      if (payload.poster?.publicPath) {
+        setPosterUrl(`${payload.poster.publicPath}?t=${Date.now()}`)
+        setPosterNote(
+          payload.poster.reused
+            ? 'Using the existing local cover file.'
+            : 'Poster saved to public/covers/.',
+        )
+      } else {
+        const year = parseYear(payload.fields.Year)
+        const local = coverCandidates(payload.fields.Title || '', year, '')[0]
+        setPosterUrl(local ? `${local}?t=${Date.now()}` : null)
+        setPosterNote(payload.poster?.message || 'No poster downloaded.')
+      }
+
+      setStatusMessage('TMDb details loaded. Review the form, then save.')
+      setPickerResults(null)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Could not load TMDb details.')
+      setStatusMessage('')
+    } finally {
+      setFetchPhase('idle')
+    }
+  }
+
+  async function onFetchFromTmdb() {
+    setError(null)
+    setWarnings([])
+    setPickerResults(null)
+    setDuplicates(null)
+    setAllowDuplicateSave(false)
+    setFetchPhase('search')
+    setStatusMessage('Searching TMDb…')
+
+    try {
+      const outcome = await searchTmdb({
+        title: lookupTitle || values.Title,
+        year: lookupYear || values.Year,
+        tmdbId: lookupTmdbId,
+      })
+
+      if (outcome.status === 'none') {
+        setError(
+          outcome.message ||
+            'No TMDb matches found. Try a different title, add a year, or enter a TMDb ID.',
+        )
+        setStatusMessage('')
+        return
+      }
+
+      if (outcome.status === 'ambiguous') {
+        setPickerResults(outcome.results)
+        setPickerMessage(outcome.message)
+        setStatusMessage('Multiple matches — pick the correct movie.')
+        return
+      }
+
+      const match = outcome.match ?? outcome.results[0]
+      if (!match) {
+        setError('No TMDb matches found.')
+        setStatusMessage('')
+        return
+      }
+
+      await loadDetails(match.tmdbId)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'TMDb search failed.')
+      setStatusMessage('')
+    } finally {
+      setFetchPhase('idle')
+    }
+  }
+
+  async function onRetryPoster() {
+    if (selectedTmdbId == null) return
+    setFetchPhase('poster')
+    setError(null)
+    setStatusMessage('Downloading poster…')
+    try {
+      const poster = await downloadTmdbPoster(selectedTmdbId, {
+        title: values.Title,
+        year: values.Year,
+        force: true,
+      })
+      if (poster.publicPath) {
+        setPosterUrl(`${poster.publicPath}?t=${Date.now()}`)
+        setPosterNote(poster.message || 'Poster updated.')
+      } else {
+        setPosterNote(poster.message || 'Poster download failed.')
+      }
+      setStatusMessage('Poster download finished.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Poster download failed.')
+      setStatusMessage('')
+    } finally {
+      setFetchPhase('idle')
+    }
+  }
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault()
+    setSaving(true)
+    setError(null)
+    try {
+      if (!allowDuplicateSave) {
+        const matches = await findDuplicates(values.Title, values.Year)
+        if (matches.length > 0) {
+          setDuplicates(matches)
+          setSaving(false)
+          return
+        }
+      }
+
+      const movie = await createMovie(values)
+      await reload()
+      navigate(`/movie/${movie.catalogId}`)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Could not save movie.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -37,27 +242,22 @@ export function AddMoviePage() {
       <div className="status-panel status-panel--error" role="alert">
         <h1>Editing unavailable</h1>
         <p>
-          Start the app with <code>npm run dev</code> so the local save server is running. Opening
-          only the static site cannot update the spreadsheet.
+          Start the app with <code>npm start</code> (house/LAN) or <code>npm run dev</code> so the
+          local save server is running.
         </p>
         <Link to="/">Back to collection</Link>
       </div>
     )
   }
 
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault()
-    setSaving(true)
-    setError(null)
-    try {
-      const movie = await createMovie(values)
-      navigate(`/movie/${movie.catalogId}`)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Could not save movie.')
-    } finally {
-      setSaving(false)
-    }
-  }
+  const fetchLabel =
+    fetchPhase === 'search'
+      ? 'Searching…'
+      : fetchPhase === 'details'
+        ? 'Loading details…'
+        : fetchPhase === 'poster'
+          ? 'Downloading poster…'
+          : 'Fetch from TMDb'
 
   return (
     <section className="add-movie-page">
@@ -67,18 +267,143 @@ export function AddMoviePage() {
       <header className="add-movie-page__intro">
         <h1>Add a movie</h1>
         <p>
-          New rows are saved to <code>Master Film List.xlsx</code> in this project.
-          Catalog ID is created automatically if you leave it blank.
+          Look up title details on TMDb, review the form, then save to{' '}
+          <code>Master Film List.xlsx</code>. Disc format, edition, HDR flags, and Rotten Tomatoes
+          stay manual.
         </p>
         {collectionPath ? <p className="add-movie-page__path">{collectionPath}</p> : null}
       </header>
 
-      <form className="add-movie-page__form" onSubmit={onSubmit}>
+      <div className="add-movie-page__tmdb" aria-labelledby="tmdb-lookup-heading">
+        <h2 id="tmdb-lookup-heading">TMDb lookup</h2>
+        <div className="add-movie-page__tmdb-grid">
+          <label>
+            <span>Movie title</span>
+            <input
+              type="text"
+              value={lookupTitle}
+              onChange={(event) => setLookupTitle(event.target.value)}
+              autoComplete="off"
+              disabled={busy}
+            />
+          </label>
+          <label>
+            <span>Release year (optional)</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={lookupYear}
+              onChange={(event) => setLookupYear(event.target.value)}
+              placeholder="e.g. 1979"
+              disabled={busy}
+            />
+          </label>
+          <label>
+            <span>TMDb ID (optional)</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={lookupTmdbId}
+              onChange={(event) => setLookupTmdbId(event.target.value)}
+              placeholder="Exact match"
+              disabled={busy}
+            />
+          </label>
+        </div>
+        <div className="add-movie-page__tmdb-actions">
+          <button
+            type="button"
+            onClick={() => void onFetchFromTmdb()}
+            disabled={busy || (!lookupTitle.trim() && !lookupTmdbId.trim() && !values.Title?.trim())}
+          >
+            {fetchLabel}
+          </button>
+          {selectedTmdbId != null ? (
+            <button
+              type="button"
+              className="add-movie-page__secondary"
+              onClick={() => void onRetryPoster()}
+              disabled={busy}
+            >
+              Retry poster download
+            </button>
+          ) : null}
+        </div>
+        <p className="add-movie-page__tmdb-note" role="status" aria-live="polite">
+          {statusMessage ||
+            'Fetching fills movie metadata only. It does not save the spreadsheet row until you click Save movie.'}
+        </p>
+      </div>
+
+      {posterUrl || fromTmdb ? (
+        <div className="add-movie-page__preview">
+          <div className="add-movie-page__preview-art">
+            {posterUrl ? (
+              <img src={posterUrl} alt={`Poster preview for ${values.Title || 'selected movie'}`} />
+            ) : (
+              <div className="add-movie-page__preview-missing">No poster preview</div>
+            )}
+          </div>
+          <div>
+            {fromTmdb ? (
+              <p className="add-movie-page__badge">Fields below were filled from TMDb — review before saving.</p>
+            ) : null}
+            {posterNote ? <p className="add-movie-page__sync">{posterNote}</p> : null}
+          </div>
+        </div>
+      ) : null}
+
+      {warnings.length > 0 ? (
+        <ul className="add-movie-page__warnings" role="status">
+          {warnings.map((warning) => (
+            <li key={warning}>{warning}</li>
+          ))}
+        </ul>
+      ) : null}
+
+      {duplicates && duplicates.length > 0 ? (
+        <div className="add-movie-page__duplicates" role="alert">
+          <h2>Possible duplicate</h2>
+          <p>
+            A title with the same name{values.Year ? ` and year` : ''} is already in the collection.
+            If you own another physical edition, you can still add it.
+          </p>
+          <ul>
+            {duplicates.map((item) => (
+              <li key={item.catalogId}>
+                <Link to={`/movie/${item.catalogId}`}>
+                  {item.title}
+                  {item.year ? ` (${item.year})` : ''} — {item.catalogId}
+                </Link>
+                {item.discFormat || item.edition
+                  ? ` · ${[item.edition, item.discFormat].filter(Boolean).join(' · ')}`
+                  : null}
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            className="add-movie-page__secondary"
+            onClick={() => {
+              setAllowDuplicateSave(true)
+              setDuplicates(null)
+            }}
+          >
+            Add anyway as another edition
+          </button>
+        </div>
+      ) : null}
+
+      <form className="add-movie-page__form" onSubmit={(event) => void onSubmit(event)}>
         <MovieForm
           columns={columns}
           values={values}
           showCatalogId
-          onChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+          onChange={(field, value) => {
+            setValues((current) => ({ ...current, [field]: value }))
+            if (field === 'Title') setLookupTitle(value)
+            if (field === 'Year') setLookupYear(value)
+          }}
         />
 
         {error ? (
@@ -88,12 +413,27 @@ export function AddMoviePage() {
         ) : null}
 
         <div className="add-movie-page__actions">
-          <button type="submit" disabled={saving || !values.Title?.trim()}>
+          <button type="submit" disabled={busy || !values.Title?.trim()}>
             {saving ? 'Saving…' : 'Save movie'}
           </button>
           <Link to="/">Cancel</Link>
         </div>
       </form>
+
+      {pickerResults ? (
+        <TmdbResultPicker
+          results={pickerResults}
+          message={pickerMessage}
+          busy={busy}
+          onCancel={() => {
+            setPickerResults(null)
+            setStatusMessage('')
+          }}
+          onSelect={(result) => {
+            void loadDetails(result.tmdbId)
+          }}
+        />
+      ) : null}
     </section>
   )
 }

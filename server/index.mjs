@@ -11,10 +11,15 @@ import {
   todayStamp,
   writeCollection,
 } from './collectionStore.mjs'
+import { loadEnvFile } from './loadEnv.mjs'
+import { createDuplicatesRouter, createTmdbRouter } from './tmdb/routes.mjs'
+
+loadEnvFile()
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const DIST_DIR = join(ROOT, 'dist')
+const PUBLIC_COVERS_DIR = join(ROOT, 'public/covers')
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.SHELF_SERVE_DIST === '1'
 /** Bind address: use 0.0.0.0 on a home server so other devices can connect. */
@@ -27,6 +32,9 @@ const PORT = Number(
 const app = express()
 app.use(express.json({ limit: '2mb' }))
 
+/** Prefer live covers from public/ so TMDb downloads appear without rebuilding. */
+app.use('/covers', express.static(PUBLIC_COVERS_DIR))
+
 app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
@@ -34,8 +42,14 @@ app.get('/api/health', (_req, res) => {
     collectionPath: COLLECTION_PATH,
     csvPath: COLLECTION_PATH,
     mode: isProduction ? 'production' : 'development',
+    tmdbConfigured: Boolean(
+      (process.env.TMDB_API_KEY || process.env.TMDB_READ_ACCESS_TOKEN || '').trim(),
+    ),
   })
 })
+
+app.use('/api/tmdb', createTmdbRouter())
+app.use('/api/movies', createDuplicatesRouter())
 
 app.get('/api/movies', (_req, res) => {
   try {

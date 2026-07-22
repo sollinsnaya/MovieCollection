@@ -12,7 +12,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "fetch-covers": "node scripts/fetch-covers.mjs",
-    "restart": "bash scripts/restart-dev.sh"
+    "restart": "bash scripts/restart-dev.sh",
+    "test": "node --test server/tmdb/tmdb.test.mjs"
   },
   "dependencies": {
     "@fontsource/fraunces": "^5.2.9",

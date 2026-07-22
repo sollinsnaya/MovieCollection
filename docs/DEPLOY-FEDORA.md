@@ -108,5 +108,6 @@ Still uses Vite on `127.0.0.1:5173` + API on `5188`.
 
 - **Paths** in the app are portable (no macOS Desktop dependency).
 - **Moods** stay in each browser’s `localStorage` (not shared across phones unless you use the same browser profile).
-- **Covers** must exist under `public/covers/` before `npm run build` (they are copied into `dist/`).
+- **Covers:** new posters land in `public/covers/`. Production serves that folder live at `/covers`, so a rebuild is not required just to see a freshly fetched poster. After UI code changes, still run `npm run build` and restart `shelf`.
+- If poster writes fail on Fedora, ensure the service user owns `public/covers/` (`sudo chown -R solli:solli public/covers`).
 - Case-sensitive filesystem on Fedora is fine with the current filenames.

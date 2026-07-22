@@ -18,12 +18,14 @@ For a plain-language how-to inside the running app, open the **Help** page.
 - Cover images via filename convention (no app code changes)
 - In-app Help page for adding movies and updating covers
 - Add / edit / delete spreadsheet rows from the app (via local API)
+- **Fetch from TMDb** on the Add page: search, pick ambiguous matches, prefill metadata, download a local poster
 
 ### Spreadsheet notes
 
 - Genre comes from the `Genre` column and is available in filters and Browse.
 - Boutique Label is often empty in the sheet.
 - Long verification-style Franchise values are excluded from browse/filter options.
+- Rotten Tomatoes and all physical-edition columns stay manual — TMDb never fills ratings or disc flags.
 
 ## Requirements
 
@@ -34,7 +36,15 @@ For a plain-language how-to inside the running app, open the **Help** page.
 ```bash
 cd ~/Projects/movie-collection
 npm install
+cp .env.example .env
 ```
+
+Edit `.env` and set **one** of:
+
+- `TMDB_API_KEY` — v3 API key from https://www.themoviedb.org/settings/api  
+- `TMDB_READ_ACCESS_TOKEN` — v4 Read Access Token (JWT)
+
+The key is loaded only by the Express server. It is never exposed to the browser.
 
 The collection spreadsheet lives at the project root:
 
@@ -56,7 +66,7 @@ This starts both:
 
 Prefer **http://127.0.0.1:5173/** over `localhost` on macOS.
 
-Use **Add** to create titles and **Edit spreadsheet row** on a movie page to change fields. Saves update the root Excel file.
+Use **Add** → **Fetch from TMDb** to prefill metadata and download a poster, then review and **Save movie**. Physical fields (format, edition, HDR, RT score, …) stay blank for you to fill in.
 
 ## Deploy on a Fedora home server
 
@@ -69,6 +79,14 @@ npm start
 ```
 
 Then open `http://<server-lan-ip>:3080/` from any device on the house network.
+
+After code changes on the house server:
+
+```bash
+npm install
+npm run build
+sudo systemctl restart shelf
+```
 
 ## Cover images
 

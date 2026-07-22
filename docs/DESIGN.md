@@ -150,9 +150,31 @@ flowchart LR
 - `POST /api/movies` — add a row  
 - `PUT /api/movies/:catalogId` — update a row  
 - `DELETE /api/movies/:catalogId` — remove a row  
+- `GET /api/movies/duplicates?title=&year=` — probable duplicate check before save  
+- `GET /api/tmdb/search` — title/year/TMDb ID search (credentials stay on the server)  
+- `GET /api/tmdb/movie/:tmdbId` — details + spreadsheet field mapping + optional poster download  
+- `POST /api/tmdb/movie/:tmdbId/poster` — download/replace local cover  
 
-`npm run dev` starts the API and the web UI together.
+`npm run dev` starts the API and the web UI together. House/LAN mode uses `npm start` / systemd on port 3080.
 
+### TMDb-assisted Add Movie
+
+```mermaid
+flowchart LR
+  AddUI["Add Movie page"] --> Search["GET /api/tmdb/search"]
+  Search -->|ambiguous| Picker["Result picker"]
+  Search -->|matched| Details["GET /api/tmdb/movie/:id"]
+  Picker --> Details
+  Details --> Form["Prefill form fields"]
+  Details --> Covers["public/covers/Title (Year).jpg"]
+  Form --> Save["POST /api/movies"]
+  Save --> Sheet["Master Film List.xlsx"]
+```
+
+TMDb may fill: Title, Year, Director, Runtime, Genre, Studio/Distributor, Franchise, Spoiler Free Summary (when those columns exist).  
+TMDb never fills: ratings (including Rotten Tomatoes), Catalog ID, disc format/edition/Steelbook, boutique, HDR/Atmos/DTS flags, Wikipedia Link.
+
+The UI never talks to TMDb directly. Poster files are stored locally; `/covers` is served from `public/covers/` so new downloads appear without rebuilding.
 ## How records, covers, and moods link
 
 | Concern | Link key | Location |
@@ -162,7 +184,7 @@ flowchart LR
 | Cover image (fallback) | `Catalog ID.jpg` | `public/covers/MC-0001.jpg` |
 | Moods | `Catalog ID` → list of mood labels | Browser `localStorage` key `shelf-moods-v1` |
 
-The UI never downloads posters itself. It only looks for files already present under `public/covers/`.
+The catalog displays local files under `public/covers/`. Add Movie can download a poster via the server API; the batch script `npm run fetch-covers` remains available.
 
 ## Spreadsheet normalization
 
@@ -196,9 +218,9 @@ The spreadsheet columns are preserved as-is for the detail page. Derived display
 ## Security & privacy notes
 
 - Runs locally; collection data stays on the machine
-- TMDb is contacted only when someone runs `npm run fetch-covers`
-- API credentials live in `.env` (not committed)
-- Collection spreadsheet is the committed project-root CSV
+- TMDb is contacted only from the Express server (Add Movie fetch, poster download, or `npm run fetch-covers`)
+- API credentials live in `.env` (not committed) and are never returned to the browser
+- Collection spreadsheet is the project-root Excel file (`Master Film List.xlsx`)
 
 ## Related docs
 
