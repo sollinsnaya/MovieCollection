@@ -1,0 +1,647 @@
+{
+  "startedAt": "2026-07-22T23:39:24.378Z",
+  "authMode": "api_key",
+  "downloaded": [
+    {
+      "catalogId": "MC-0013",
+      "file": "The Band Wagon (1953).jpg",
+      "tmdbId": 29376,
+      "tmdbTitle": "The Band Wagon"
+    },
+    {
+      "catalogId": "MC-0018",
+      "file": "The Birds (1963).jpg",
+      "tmdbId": 571,
+      "tmdbTitle": "The Birds"
+    },
+    {
+      "catalogId": "MC-0022",
+      "file": "The Bride of Frankenstein (1935).jpg",
+      "tmdbId": 229,
+      "tmdbTitle": "Bride of Frankenstein"
+    },
+    {
+      "catalogId": "MC-0024",
+      "file": "Creature from the Black Lagoon (1954).jpg",
+      "tmdbId": 10973,
+      "tmdbTitle": "Creature from the Black Lagoon"
+    },
+    {
+      "catalogId": "MC-0031",
+      "file": "Diamonds Are Forever (1971).jpg",
+      "tmdbId": 681,
+      "tmdbTitle": "Diamonds Are Forever"
+    },
+    {
+      "catalogId": "MC-0033",
+      "file": "Dr. No (1962).jpg",
+      "tmdbId": 646,
+      "tmdbTitle": "Dr. No"
+    },
+    {
+      "catalogId": "MC-0034",
+      "file": "Dracula (1931).jpg",
+      "tmdbId": 138,
+      "tmdbTitle": "Dracula"
+    },
+    {
+      "catalogId": "MC-0041",
+      "file": "Easter Parade (1948).jpg",
+      "tmdbId": 29380,
+      "tmdbTitle": "Easter Parade"
+    },
+    {
+      "catalogId": "MC-0045",
+      "file": "Family Plot (1976).jpg",
+      "tmdbId": 5854,
+      "tmdbTitle": "Family Plot"
+    },
+    {
+      "catalogId": "MC-0047",
+      "file": "Frankenstein (1931).jpg",
+      "tmdbId": 3035,
+      "tmdbTitle": "Frankenstein"
+    },
+    {
+      "catalogId": "MC-0048",
+      "file": "From Russia With Love (1963).jpg",
+      "tmdbId": 657,
+      "tmdbTitle": "From Russia with Love"
+    },
+    {
+      "catalogId": "MC-0050",
+      "file": "Goldfinger (1964).jpg",
+      "tmdbId": 658,
+      "tmdbTitle": "Goldfinger"
+    },
+    {
+      "catalogId": "MC-0056",
+      "file": "The Invisible Man (1933).jpg",
+      "tmdbId": 10787,
+      "tmdbTitle": "The Invisible Man"
+    },
+    {
+      "catalogId": "MC-0071",
+      "file": "Marnie (1964).jpg",
+      "tmdbId": 506,
+      "tmdbTitle": "Marnie"
+    },
+    {
+      "catalogId": "MC-0075",
+      "file": "Meet Me in St. Louis (1944).jpg",
+      "tmdbId": 909,
+      "tmdbTitle": "Meet Me in St. Louis"
+    },
+    {
+      "catalogId": "MC-0077",
+      "file": "The Mummy (1932).jpg",
+      "tmdbId": 15849,
+      "tmdbTitle": "The Mummy"
+    },
+    {
+      "catalogId": "MC-0080",
+      "file": "Phantom of the Opera (1943).jpg",
+      "tmdbId": 15855,
+      "tmdbTitle": "Phantom of the Opera"
+    },
+    {
+      "catalogId": "MC-0085",
+      "file": "Psycho (1960).jpg",
+      "tmdbId": 539,
+      "tmdbTitle": "Psycho"
+    },
+    {
+      "catalogId": "MC-0087",
+      "file": "Rear Window (1954).jpg",
+      "tmdbId": 567,
+      "tmdbTitle": "Rear Window"
+    },
+    {
+      "catalogId": "MC-0090",
+      "file": "Saboteur (1942).jpg",
+      "tmdbId": 31997,
+      "tmdbTitle": "Saboteur"
+    },
+    {
+      "catalogId": "MC-0093",
+      "file": "Shadow of a Doubt (1943).jpg",
+      "tmdbId": 21734,
+      "tmdbTitle": "Shadow of a Doubt"
+    },
+    {
+      "catalogId": "MC-0099",
+      "file": "Singin' In the Rain (1952).jpg",
+      "tmdbId": 872,
+      "tmdbTitle": "Singin' in the Rain"
+    },
+    {
+      "catalogId": "MC-0105",
+      "file": "Star Wars Episode 1 The Phantom Menace (1999).jpg",
+      "tmdbId": 1893,
+      "tmdbTitle": "Star Wars: Episode I - The Phantom Menace"
+    },
+    {
+      "catalogId": "MC-0106",
+      "file": "Star Wars Episode 2 Attack of the Clones (2002).jpg",
+      "tmdbId": 1894,
+      "tmdbTitle": "Star Wars: Episode II - Attack of the Clones"
+    },
+    {
+      "catalogId": "MC-0107",
+      "file": "Star Wars Episode 3 Revenge of the Sith (2005).jpg",
+      "tmdbId": 1895,
+      "tmdbTitle": "Star Wars: Episode III - Revenge of the Sith"
+    },
+    {
+      "catalogId": "MC-0108",
+      "file": "Star Wars Episode 4 A New Hope (1977).jpg",
+      "tmdbId": 11,
+      "tmdbTitle": "Star Wars"
+    },
+    {
+      "catalogId": "MC-0109",
+      "file": "Star Wars Episode 5 The Empire Strikes Back (1980).jpg",
+      "tmdbId": 1891,
+      "tmdbTitle": "The Empire Strikes Back"
+    },
+    {
+      "catalogId": "MC-0118",
+      "file": "Thunderball (1965).jpg",
+      "tmdbId": 660,
+      "tmdbTitle": "Thunderball"
+    },
+    {
+      "catalogId": "MC-0125",
+      "file": "Tron Ares (2025).jpg",
+      "tmdbId": 533533,
+      "tmdbTitle": "TRON: Ares"
+    },
+    {
+      "catalogId": "MC-0128",
+      "file": "The Trouble with Harry (1955).jpg",
+      "tmdbId": 11219,
+      "tmdbTitle": "The Trouble with Harry"
+    },
+    {
+      "catalogId": "MC-0134",
+      "file": "Vertigo (1958).jpg",
+      "tmdbId": 426,
+      "tmdbTitle": "Vertigo"
+    },
+    {
+      "catalogId": "MC-0138",
+      "file": "The Wolf Man (1941).jpg",
+      "tmdbId": 13666,
+      "tmdbTitle": "The Wolf Man"
+    },
+    {
+      "catalogId": "MC-0140",
+      "file": "You Only Live Twice (1967).jpg",
+      "tmdbId": 667,
+      "tmdbTitle": "You Only Live Twice"
+    }
+  ],
+  "skippedExisting": [
+    {
+      "catalogId": "MC-0001",
+      "file": "1917 (2019).jpg"
+    },
+    {
+      "catalogId": "MC-0002",
+      "file": "The 40-Year-Old Virgin (2005).jpg"
+    },
+    {
+      "catalogId": "MC-0003",
+      "file": "Air (2023).jpg"
+    },
+    {
+      "catalogId": "MC-0004",
+      "file": "Akira (1988).jpg"
+    },
+    {
+      "catalogId": "MC-0005",
+      "file": "Alien (1979).jpg"
+    },
+    {
+      "catalogId": "MC-0006",
+      "file": "Alien Romulus (2024).jpg"
+    },
+    {
+      "catalogId": "MC-0007",
+      "file": "Aliens (1986).jpg"
+    },
+    {
+      "catalogId": "MC-0008",
+      "file": "American Psycho (2000).jpg"
+    },
+    {
+      "catalogId": "MC-0009",
+      "file": "Argo (2012).jpg"
+    },
+    {
+      "catalogId": "MC-0010",
+      "file": "Avatar (2009).jpg"
+    },
+    {
+      "catalogId": "MC-0011",
+      "file": "Avatar The Way of Water (2022).jpg"
+    },
+    {
+      "catalogId": "MC-0012",
+      "file": "Back to the Future (1985).jpg"
+    },
+    {
+      "catalogId": "MC-0014",
+      "file": "The Batman (2022).jpg"
+    },
+    {
+      "catalogId": "MC-0015",
+      "file": "Batman Begins (2005).jpg"
+    },
+    {
+      "catalogId": "MC-0016",
+      "file": "Beetlejuice (1988).jpg"
+    },
+    {
+      "catalogId": "MC-0017",
+      "file": "The Big Lebowski (1998).jpg"
+    },
+    {
+      "catalogId": "MC-0019",
+      "file": "Blade Runner (1982).jpg"
+    },
+    {
+      "catalogId": "MC-0020",
+      "file": "Blade Runner 2049 (2017).jpg"
+    },
+    {
+      "catalogId": "MC-0021",
+      "file": "Blazing Saddles (1974).jpg"
+    },
+    {
+      "catalogId": "MC-0023",
+      "file": "Collateral (2004).jpg"
+    },
+    {
+      "catalogId": "MC-0025",
+      "file": "The Dark Knight (2008).jpg"
+    },
+    {
+      "catalogId": "MC-0026",
+      "file": "The Dark Knight Rises (2012).jpg"
+    },
+    {
+      "catalogId": "MC-0027",
+      "file": "Deadpool & Wolverine (2024).jpg"
+    },
+    {
+      "catalogId": "MC-0028",
+      "file": "Deadpool 2 (2018).jpg"
+    },
+    {
+      "catalogId": "MC-0029",
+      "file": "Despicable Me 4 (2024).jpg"
+    },
+    {
+      "catalogId": "MC-0030",
+      "file": "The Devil Wears Prada (2006).jpg"
+    },
+    {
+      "catalogId": "MC-0032",
+      "file": "District 9 (2009).jpg"
+    },
+    {
+      "catalogId": "MC-0035",
+      "file": "Dredd (2012).jpg"
+    },
+    {
+      "catalogId": "MC-0036",
+      "file": "Dune (2021).jpg"
+    },
+    {
+      "catalogId": "MC-0037",
+      "file": "Dune Part Two (2024).jpg"
+    },
+    {
+      "catalogId": "MC-0038",
+      "file": "Dunkirk (2017).jpg"
+    },
+    {
+      "catalogId": "MC-0039",
+      "file": "E.T. the Extra-Terrestrial (1982).jpg"
+    },
+    {
+      "catalogId": "MC-0042",
+      "file": "Escape from New York (1981).jpg"
+    },
+    {
+      "catalogId": "MC-0043",
+      "file": "Everything Everywhere All at Once (2022).jpg"
+    },
+    {
+      "catalogId": "MC-0044",
+      "file": "F1 The Movie (2025).jpg"
+    },
+    {
+      "catalogId": "MC-0046",
+      "file": "Ford v Ferrari (2019).jpg"
+    },
+    {
+      "catalogId": "MC-0049",
+      "file": "Gabby's Dollhouse The Movie (2025).jpg"
+    },
+    {
+      "catalogId": "MC-0051",
+      "file": "The Greatest Showman (2017).jpg"
+    },
+    {
+      "catalogId": "MC-0052",
+      "file": "Halloween (1978).jpg"
+    },
+    {
+      "catalogId": "MC-0053",
+      "file": "The Ides of March (2011).jpg"
+    },
+    {
+      "catalogId": "MC-0054",
+      "file": "Inception (2010).jpg"
+    },
+    {
+      "catalogId": "MC-0055",
+      "file": "Indiana Jones and the Last Crusade (1989).jpg"
+    },
+    {
+      "catalogId": "MC-0057",
+      "file": "The Italian Job (2003).jpg"
+    },
+    {
+      "catalogId": "MC-0058",
+      "file": "Jaws (1975).jpg"
+    },
+    {
+      "catalogId": "MC-0059",
+      "file": "Jurassic Park (1993).jpg"
+    },
+    {
+      "catalogId": "MC-0060",
+      "file": "King Kong (2005).jpg"
+    },
+    {
+      "catalogId": "MC-0061",
+      "file": "Kung Fu Panda (2008).jpg"
+    },
+    {
+      "catalogId": "MC-0062",
+      "file": "Les Misérables (2012).jpg"
+    },
+    {
+      "catalogId": "MC-0063",
+      "file": "Life (2009).jpg"
+    },
+    {
+      "catalogId": "MC-0064",
+      "file": "Looney Tunes Golden Collection (2003).jpg"
+    },
+    {
+      "catalogId": "MC-0066",
+      "file": "The Lord of the Rings The Fellowship of the Ring (2001).jpg"
+    },
+    {
+      "catalogId": "MC-0067",
+      "file": "The Lord of the Rings The Return of the King (2003).jpg"
+    },
+    {
+      "catalogId": "MC-0068",
+      "file": "The Lord of the Rings The Two Towers (2002).jpg"
+    },
+    {
+      "catalogId": "MC-0069",
+      "file": "The Lost World Jurassic Park (1997).jpg"
+    },
+    {
+      "catalogId": "MC-0070",
+      "file": "Mad Max Fury Road (2015).jpg"
+    },
+    {
+      "catalogId": "MC-0072",
+      "file": "The Mask (1994).jpg"
+    },
+    {
+      "catalogId": "MC-0073",
+      "file": "The Matrix (1999).jpg"
+    },
+    {
+      "catalogId": "MC-0074",
+      "file": "Maudie (2016).jpg"
+    },
+    {
+      "catalogId": "MC-0076",
+      "file": "A Minecraft Movie (2025).jpg"
+    },
+    {
+      "catalogId": "MC-0078",
+      "file": "The Naked Gun (2025).jpg"
+    },
+    {
+      "catalogId": "MC-0081",
+      "file": "Planet Earth (2006).jpg"
+    },
+    {
+      "catalogId": "MC-0083",
+      "file": "The Prince of Egypt (1998).jpg"
+    },
+    {
+      "catalogId": "MC-0084",
+      "file": "The Producers (1967).jpg"
+    },
+    {
+      "catalogId": "MC-0086",
+      "file": "Ratatouille (2007).jpg"
+    },
+    {
+      "catalogId": "MC-0088",
+      "file": "Reservoir Dogs (1992).jpg"
+    },
+    {
+      "catalogId": "MC-0089",
+      "file": "Rogue One A Star Wars Story (2016).jpg"
+    },
+    {
+      "catalogId": "MC-0091",
+      "file": "Schindler's List (1993).jpg"
+    },
+    {
+      "catalogId": "MC-0092",
+      "file": "Se7en (1995).jpg"
+    },
+    {
+      "catalogId": "MC-0094",
+      "file": "Shaun of the Dead (2004).jpg"
+    },
+    {
+      "catalogId": "MC-0095",
+      "file": "The Shawshank Redemption (1994).jpg"
+    },
+    {
+      "catalogId": "MC-0096",
+      "file": "The Silence of the Lambs (1991).jpg"
+    },
+    {
+      "catalogId": "MC-0097",
+      "file": "Silver Linings Playbook (2012).jpg"
+    },
+    {
+      "catalogId": "MC-0098",
+      "file": "The Simpsons Movie (2007).jpg"
+    },
+    {
+      "catalogId": "MC-0100",
+      "file": "Sinners (2025).jpg"
+    },
+    {
+      "catalogId": "MC-0101",
+      "file": "Space Jam (1996).jpg"
+    },
+    {
+      "catalogId": "MC-0102",
+      "file": "Speed (1994).jpg"
+    },
+    {
+      "catalogId": "MC-0103",
+      "file": "Stand by Me (1986).jpg"
+    },
+    {
+      "catalogId": "MC-0104",
+      "file": "Star Trek (2009).jpg"
+    },
+    {
+      "catalogId": "MC-0110",
+      "file": "Star Wars Episode 6 Return of the Jedi (1983).jpg"
+    },
+    {
+      "catalogId": "MC-0111",
+      "file": "Teenage Mutant Ninja Turtles (1990).jpg"
+    },
+    {
+      "catalogId": "MC-0112",
+      "file": "Teenage Mutant Ninja Turtles II The Secret of the Ooze (1991).jpg"
+    },
+    {
+      "catalogId": "MC-0113",
+      "file": "Teenage Mutant Ninja Turtles III (1993).jpg"
+    },
+    {
+      "catalogId": "MC-0114",
+      "file": "Teenage Mutant Ninja Turtles Mutant Mayhem (2023).jpg"
+    },
+    {
+      "catalogId": "MC-0115",
+      "file": "Terminator 2 Judgment Day (1991).jpg"
+    },
+    {
+      "catalogId": "MC-0116",
+      "file": "They Live (1988).jpg"
+    },
+    {
+      "catalogId": "MC-0117",
+      "file": "The Thing (1982).jpg"
+    },
+    {
+      "catalogId": "MC-0119",
+      "file": "To Kill a Mockingbird (1962).jpg"
+    },
+    {
+      "catalogId": "MC-0120",
+      "file": "Tommy Boy (1995).jpg"
+    },
+    {
+      "catalogId": "MC-0121",
+      "file": "Top Gun (1986).jpg"
+    },
+    {
+      "catalogId": "MC-0122",
+      "file": "Top Gun Maverick (2022).jpg"
+    },
+    {
+      "catalogId": "MC-0123",
+      "file": "The Town (2010).jpg"
+    },
+    {
+      "catalogId": "MC-0124",
+      "file": "Tron (1982).jpg"
+    },
+    {
+      "catalogId": "MC-0126",
+      "file": "Tron Legacy (2010).jpg"
+    },
+    {
+      "catalogId": "MC-0127",
+      "file": "Tropic Thunder (2008).jpg"
+    },
+    {
+      "catalogId": "MC-0129",
+      "file": "True Lies (1994).jpg"
+    },
+    {
+      "catalogId": "MC-0130",
+      "file": "Twister (1996).jpg"
+    },
+    {
+      "catalogId": "MC-0131",
+      "file": "Up (2009).jpg"
+    },
+    {
+      "catalogId": "MC-0132",
+      "file": "The Usual Suspects (1995).jpg"
+    },
+    {
+      "catalogId": "MC-0133",
+      "file": "V for Vendetta (2005).jpg"
+    },
+    {
+      "catalogId": "MC-0135",
+      "file": "Who Framed Roger Rabbit (1988).jpg"
+    },
+    {
+      "catalogId": "MC-0136",
+      "file": "Wicked (2024).jpg"
+    },
+    {
+      "catalogId": "MC-0137",
+      "file": "The Wild Robot (2024).jpg"
+    },
+    {
+      "catalogId": "MC-0139",
+      "file": "The Wolf of Wall Street (2013).jpg"
+    },
+    {
+      "catalogId": "MC-0141",
+      "file": "The Hangover (2009).jpg"
+    }
+  ],
+  "missingPoster": [],
+  "noMatch": [
+    {
+      "catalogId": "MC-0040",
+      "title": "Earth: The Biography",
+      "year": 2007
+    },
+    {
+      "catalogId": "MC-0065",
+      "title": "Looney Tunes Super Stars: 45 Cartoon Classics",
+      "year": null
+    },
+    {
+      "catalogId": "MC-0079",
+      "title": "North by North West",
+      "year": 1959
+    },
+    {
+      "catalogId": "MC-0082",
+      "title": "Police Squad! In Color: The Complete Series",
+      "year": 1982
+    }
+  ],
+  "errors": [],
+  "finishedAt": "2026-07-22T23:39:42.884Z"
+}

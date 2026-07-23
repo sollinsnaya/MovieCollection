@@ -12,7 +12,9 @@ import {
   writeCollection,
 } from './collectionStore.mjs'
 import { loadEnvFile } from './loadEnv.mjs'
+import { createCoverRouter } from './coverRoutes.mjs'
 import { createDuplicatesRouter, createTmdbRouter } from './tmdb/routes.mjs'
+import { createWikipediaRouter } from './wikipedia/routes.mjs'
 
 loadEnvFile()
 
@@ -30,7 +32,7 @@ const PORT = Number(
 )
 
 const app = express()
-app.use(express.json({ limit: '2mb' }))
+app.use(express.json({ limit: '10mb' }))
 
 /** Prefer live covers from public/ so TMDb downloads appear without rebuilding. */
 app.use('/covers', express.static(PUBLIC_COVERS_DIR))
@@ -49,6 +51,8 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api/tmdb', createTmdbRouter())
+app.use('/api/wikipedia', createWikipediaRouter())
+app.use('/api/covers', createCoverRouter())
 app.use('/api/movies', createDuplicatesRouter())
 
 app.get('/api/movies', (_req, res) => {

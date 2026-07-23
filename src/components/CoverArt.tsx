@@ -7,20 +7,30 @@ type CoverArtProps = {
   title: string
   year?: number | null
   size?: 'card' | 'detail'
+  /** Bump to force reload after an upload/replace. */
+  revision?: number | string
 }
 
-export function CoverArt({ catalogId, title, year = null, size = 'card' }: CoverArtProps) {
-  const candidates = useMemo(
-    () => coverCandidates(title, year, catalogId),
-    [title, year, catalogId],
-  )
+export function CoverArt({
+  catalogId,
+  title,
+  year = null,
+  size = 'card',
+  revision = 0,
+}: CoverArtProps) {
+  const candidates = useMemo(() => {
+    const paths = coverCandidates(title, year, catalogId)
+    const bust = revision ? `?v=${encodeURIComponent(String(revision))}` : ''
+    return paths.map((path) => `${path}${bust}`)
+  }, [title, year, catalogId, revision])
+
   const [index, setIndex] = useState(0)
   const [failed, setFailed] = useState(candidates.length === 0)
 
   useEffect(() => {
     setIndex(0)
     setFailed(candidates.length === 0)
-  }, [catalogId, title, year, candidates.length])
+  }, [catalogId, title, year, revision, candidates.length])
 
   if (failed || index >= candidates.length) {
     return (

@@ -1,13 +1,20 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CoverArt } from '../components/CoverArt'
+import { CoverUploader } from '../components/CoverUploader'
+import { DiscFormatBadges } from '../components/DiscFormatBadges'
 import { MoodPicker } from '../components/MoodPicker'
 import { MovieForm } from '../components/MovieForm'
+import { RottenTomatoesBadge } from '../components/RottenTomatoesBadge'
 import { useMoviesContext } from '../context/MoviesContext'
+import { BOOLEAN_FIELDS, isBooleanField, isBooleanTruthy } from '../lib/booleanFields'
 import { displayValue } from '../lib/normalize'
 import { getMovieById } from '../lib/spreadsheet'
+import { isHttpUrl } from '../lib/wikipediaApi'
 import type { Movie, MovieRecord } from '../types/movie'
 import './MovieDetailPage.css'
+
+const WIKIPEDIA_FIELD = 'Wikipedia Link'
 
 const PRIMARY_FIELDS = [
   'Catalog ID',
@@ -18,37 +25,30 @@ const PRIMARY_FIELDS = [
   'Genre',
   'Studio/Distributor',
   'Edition',
-  'Steelbook',
-  'Disc Format',
   'Boutique Label',
   'Franchise',
-  'HDR10',
-  'HDR10+',
-  'Dolby Vision',
-  'Dolby Atmos',
-  'Dolby True HD',
-  'DTS:X',
-  'DTS-HD  MA',
-  '7.1',
-  '5.1',
   'Rotten Tomatoes Critic Score',
   'Spoiler Free Summary',
-  'Wikipedia Link',
 ] as const
+
+/** Shown as icons / special UI — keep out of the plain fields list. */
+function isHiddenDetailField(field: string): boolean {
+  return isBooleanField(field) || field === 'Disc Format' || field === WIKIPEDIA_FIELD
+}
 
 function fieldEntries(movie: Movie): Array<[string, string]> {
   const seen = new Set<string>()
   const ordered: Array<[string, string]> = []
 
   for (const key of PRIMARY_FIELDS) {
-    if (key in movie.fields) {
+    if (key in movie.fields && !isHiddenDetailField(key)) {
       ordered.push([key, movie.fields[key] ?? ''])
       seen.add(key)
     }
   }
 
   const remaining = Object.keys(movie.fields)
-    .filter((key) => !seen.has(key))
+    .filter((key) => !seen.has(key) && !isHiddenDetailField(key))
     .sort((a, b) => a.localeCompare(b))
 
   for (const key of remaining) {
@@ -56,6 +56,34 @@ function fieldEntries(movie: Movie): Array<[string, string]> {
   }
 
   return ordered
+}
+
+function displayLabel(field: string): string {
+  return field === 'DTS-HD  MA' ? 'DTS-HD MA' : field
+}
+
+function BooleanFeaturesReadout({ fields }: { fields: MovieRecord }) {
+  const present = BOOLEAN_FIELDS.filter((field) => field in fields)
+  if (present.length === 0) return null
+
+  return (
+    <section className="movie-detail__booleans" aria-labelledby="features-heading">
+      <h2 id="features-heading">Disc &amp; audio features</h2>
+      <ul className="movie-detail__checkbox-grid">
+        {present.map((field) => {
+          const checked = isBooleanTruthy(fields[field])
+          return (
+            <li key={field}>
+              <label className="movie-detail__checkbox">
+                <input type="checkbox" checked={checked} disabled readOnly tabIndex={-1} />
+                <span>{displayLabel(field)}</span>
+              </label>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
 }
 
 export function MovieDetailPage() {
@@ -76,6 +104,7 @@ export function MovieDetailPage() {
   const [values, setValues] = useState<MovieRecord>({})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [coverRevision, setCoverRevision] = useState(0)
 
   useEffect(() => {
     if (movie) setValues({ ...movie.fields })
@@ -165,23 +194,59 @@ export function MovieDetailPage() {
       </div>
 
       <div className="movie-detail__hero">
-        <CoverArt
-          catalogId={movie.catalogId}
-          title={movie.title}
-          year={movie.year}
-          size="detail"
-        />
+        <div className="movie-detail__cover-column">
+          <CoverArt
+            catalogId={movie.catalogId}
+            title={movie.title}
+            year={movie.year}
+            size="detail"
+            revision={coverRevision}
+          />
+          {canEdit ? (
+            <CoverUploader
+              title={movie.title}
+              year={movie.year}
+              catalogId={movie.catalogId}
+              revision={coverRevision}
+              onUploaded={() => setCoverRevision((current) => current + 1)}
+            />
+          ) : null}
+        </div>
         <div className="movie-detail__summary">
           <p className="movie-detail__id">{movie.catalogId}</p>
           <h1>{movie.title}</h1>
           <p className="movie-detail__sub">
-            {[movie.year ?? 'Year unknown', movie.director, movie.discFormat]
-              .filter(Boolean)
-              .join(' · ')}
+            {[movie.year ?? 'Year unknown', movie.director].filter(Boolean).join(' · ')}
           </p>
           {movie.edition ? <p className="movie-detail__edition">{movie.edition}</p> : null}
-          {movie.plotSummary ? (
-            <p className="movie-detail__plot">{movie.plotSummary}</p>
+          {movie.plotSummary ||
+          movie.fields['Rotten Tomatoes Critic Score'] ||
+          movie.discFormat ||
+          isHttpUrl(movie.fields[WIKIPEDIA_FIELD] ?? '') ? (
+            <div className="movie-detail__plot-block">
+              {movie.plotSummary || movie.fields['Rotten Tomatoes Critic Score'] ? (
+                <div className="movie-detail__plot-row">
+                  {movie.plotSummary ? (
+                    <p className="movie-detail__plot">{movie.plotSummary}</p>
+                  ) : (
+                    <p className="movie-detail__plot movie-detail__plot--empty">No synopsis yet.</p>
+                  )}
+                  <RottenTomatoesBadge scoreValue={movie.fields['Rotten Tomatoes Critic Score']} />
+                </div>
+              ) : null}
+              <DiscFormatBadges discFormat={movie.discFormat} />
+              {isHttpUrl(movie.fields[WIKIPEDIA_FIELD] ?? '') ? (
+                <p className="movie-detail__wikipedia">
+                  <a
+                    href={movie.fields[WIKIPEDIA_FIELD]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Read more on Wikipedia
+                  </a>
+                </p>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>
@@ -222,17 +287,20 @@ export function MovieDetailPage() {
           </form>
         </section>
       ) : (
-        <section className="movie-detail__sheet" aria-labelledby="metadata-heading">
-          <h2 id="metadata-heading">All spreadsheet fields</h2>
-          <dl className="movie-detail__fields">
-            {entries.map(([label, value]) => (
-              <div key={label} className="movie-detail__field">
-                <dt>{label}</dt>
-                <dd>{displayValue(value)}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
+        <>
+          <BooleanFeaturesReadout fields={movie.fields} />
+          <section className="movie-detail__sheet" aria-labelledby="metadata-heading">
+            <h2 id="metadata-heading">Film Credits</h2>
+            <dl className="movie-detail__fields">
+              {entries.map(([label, value]) => (
+                <div key={label} className="movie-detail__field">
+                  <dt>{label}</dt>
+                  <dd>{displayValue(value)}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        </>
       )}
     </article>
   )

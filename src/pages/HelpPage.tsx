@@ -60,7 +60,9 @@ export function HelpPage() {
         <p className="help-page__callout">
           Saves update <code>Master Film List.xlsx</code> in the project folder. If the same title
           (and year) already exists, Shelf warns you so you can open the existing entry or add
-          another physical edition on purpose.
+          another physical edition on purpose. After TMDb fetch, Shelf also tries to find an English
+          Wikipedia article and stores the URL in <code>Wikipedia Link</code> (you can edit or skip
+          it).
         </p>
       </section>
 
@@ -107,7 +109,15 @@ export function HelpPage() {
           <code>.env.example</code>). The key stays on the server and is never sent to the browser.
         </p>
 
-        <h3>Option C — Add a picture by hand</h3>
+        <h3>Option C — Upload from the movie page</h3>
+        <p>
+          Open any title and use <strong>Add cover</strong> or <strong>Replace cover</strong> under
+          the artwork. Choose a JPEG, PNG, or WebP from your device. Shelf saves it as{' '}
+          <code>Title (Year).jpg</code> in <code>public/covers/</code>. Replacing a cover deletes the
+          previous local image file(s) for that title.
+        </p>
+
+        <h3>Option D — Add a picture by hand</h3>
         <ol>
           <li>
             Put a JPEG (or PNG) image into the <code>public/covers/</code> folder.

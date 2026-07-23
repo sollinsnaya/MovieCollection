@@ -1,0 +1,27 @@
+.disc-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+}
+
+.disc-badge {
+  line-height: 0;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+}
+
+.disc-badge__image {
+  width: 6.5rem;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+/* DVD logo ships on white — keep a light plate so it stays readable on dark UI. */
+.disc-badge--dvd .disc-badge__image {
+  background: #fff;
+  padding: 0.2rem 0.35rem;
+  box-sizing: border-box;
+}

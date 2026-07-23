@@ -90,6 +90,12 @@
   margin-bottom: 2.5rem;
 }
 
+.movie-detail__cover-column {
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+}
+
 @media (min-width: 800px) {
   .movie-detail__hero {
     grid-template-columns: minmax(200px, 280px) 1fr;
@@ -126,9 +132,54 @@
   color: var(--accent-soft);
 }
 
+.movie-detail__plot-block {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0 0 0.75rem;
+  max-width: 48rem;
+}
+
+.movie-detail__plot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem 1.25rem;
+}
+
+.movie-detail__plot-row .movie-detail__plot {
+  flex: 1 1 16rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.movie-detail__plot-block .disc-badges {
+  align-items: flex-start;
+}
+
+.movie-detail__wikipedia {
+  margin: 0;
+}
+
+.movie-detail__wikipedia a {
+  color: var(--accent-soft);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.movie-detail__wikipedia a:hover,
+.movie-detail__wikipedia a:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .movie-detail__plot {
   line-height: 1.55;
   color: var(--text);
+}
+
+.movie-detail__plot--empty {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .movie-detail__sheet h2 {
@@ -136,6 +187,50 @@
   font-family: var(--font-display);
   font-weight: 500;
   font-size: 1.4rem;
+}
+
+.movie-detail__booleans {
+  margin: 0 0 2rem;
+}
+
+.movie-detail__booleans h2 {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.4rem;
+}
+
+.movie-detail__checkbox-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0.85rem 0.95rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  gap: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.movie-detail__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.movie-detail__checkbox input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
+}
+
+.movie-detail__checkbox input:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .movie-detail__fields {

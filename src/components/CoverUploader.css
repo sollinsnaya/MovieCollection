@@ -1,0 +1,53 @@
+.cover-uploader {
+  margin-top: 0.85rem;
+  display: grid;
+  gap: 0.45rem;
+  max-width: 22rem;
+}
+
+.cover-uploader__button {
+  justify-self: start;
+  border: 1px solid rgba(201, 164, 106, 0.55);
+  background: rgba(201, 164, 106, 0.16);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.55rem 0.85rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cover-uploader__button:hover:not(:disabled),
+.cover-uploader__button:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid rgba(212, 176, 122, 0.35);
+  outline-offset: 1px;
+}
+
+.cover-uploader__button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cover-uploader__hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.cover-uploader__hint code {
+  color: var(--accent-soft);
+  font-size: 0.78rem;
+}
+
+.cover-uploader__status {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--accent-soft);
+}
+
+.cover-uploader__error {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #e29a9a;
+}

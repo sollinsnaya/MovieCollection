@@ -2,6 +2,11 @@ import { type FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { blankFields, MovieForm } from '../components/MovieForm'
 import { TmdbResultPicker } from '../components/TmdbResultPicker'
+import {
+  WIKIPEDIA_FIELD,
+  WikipediaLinkField,
+} from '../components/WikipediaLinkField'
+import { WikipediaResultPicker } from '../components/WikipediaResultPicker'
 import { useMoviesContext } from '../context/MoviesContext'
 import { coverCandidates } from '../lib/covers'
 import { parseYear } from '../lib/normalize'
@@ -11,8 +16,10 @@ import {
   findDuplicates,
   searchTmdb,
 } from '../lib/tmdbApi'
+import { searchWikipedia } from '../lib/wikipediaApi'
 import type { MovieRecord } from '../types/movie'
 import type { DuplicateCandidate, TmdbSearchResult } from '../types/tmdb'
+import type { WikipediaResult, WikipediaSource } from '../types/wikipedia'
 import './AddMoviePage.css'
 
 const MANUAL_FIELDS = new Set([
@@ -32,7 +39,7 @@ const MANUAL_FIELDS = new Set([
   'Boutique Label',
   'Rotten Tomatoes Critic Score',
   'Notes',
-  'Wikipedia Link',
+  WIKIPEDIA_FIELD,
 ])
 
 function applyTmdbFields(current: MovieRecord, mapped: Record<string, string>): MovieRecord {
@@ -41,7 +48,6 @@ function applyTmdbFields(current: MovieRecord, mapped: Record<string, string>): 
     if (MANUAL_FIELDS.has(key)) continue
     next[key] = value
   }
-  // Always preserve manual cells from the form as-is.
   for (const key of MANUAL_FIELDS) {
     if (Object.prototype.hasOwnProperty.call(current, key)) {
       next[key] = current[key]
@@ -59,7 +65,9 @@ export function AddMoviePage() {
   const [lookupYear, setLookupYear] = useState('')
   const [lookupTmdbId, setLookupTmdbId] = useState('')
   const [saving, setSaving] = useState(false)
-  const [fetchPhase, setFetchPhase] = useState<'idle' | 'search' | 'details' | 'poster'>('idle')
+  const [fetchPhase, setFetchPhase] = useState<
+    'idle' | 'search' | 'details' | 'poster' | 'wikipedia'
+  >('idle')
   const [error, setError] = useState<string | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
   const [fromTmdb, setFromTmdb] = useState(false)
@@ -71,17 +79,58 @@ export function AddMoviePage() {
   const [duplicates, setDuplicates] = useState<DuplicateCandidate[] | null>(null)
   const [allowDuplicateSave, setAllowDuplicateSave] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const [wikiSource, setWikiSource] = useState<WikipediaSource>(null)
+  const [wikiPickerResults, setWikiPickerResults] = useState<WikipediaResult[] | null>(null)
+  const [wikiPickerMessage, setWikiPickerMessage] = useState<string | undefined>()
+  const [wikiNote, setWikiNote] = useState<string | null>(null)
 
   useEffect(() => {
     setValues(blankFields(columns))
   }, [columns])
 
   const busy = fetchPhase !== 'idle' || saving
+  const showWikipediaField = fromTmdb || Boolean(values[WIKIPEDIA_FIELD]?.trim()) || wikiSource != null
+
+  async function lookupWikipedia(title: string, year: string | number | null | undefined) {
+    setFetchPhase('wikipedia')
+    setStatusMessage('Looking up Wikipedia…')
+    setWikiPickerResults(null)
+    setWikiNote(null)
+    try {
+      const outcome = await searchWikipedia({ title, year })
+      if (outcome.status === 'matched' && outcome.match?.url) {
+        setValues((current) => ({ ...current, [WIKIPEDIA_FIELD]: outcome.match!.url }))
+        setWikiSource('automatic')
+        setStatusMessage('TMDb details and Wikipedia link loaded. Review the form, then save.')
+        return
+      }
+      if (outcome.status === 'ambiguous' && outcome.results.length > 0) {
+        setWikiPickerResults(outcome.results)
+        setWikiPickerMessage(outcome.message)
+        setWikiSource(null)
+        setStatusMessage('Pick the correct Wikipedia article.')
+        return
+      }
+      setWikiSource('not-found')
+      setWikiNote(
+        outcome.message ||
+          'Wikipedia page could not be found automatically. You can add it manually.',
+      )
+      setStatusMessage('TMDb details loaded. Wikipedia was not found automatically.')
+    } catch {
+      setWikiSource('not-found')
+      setWikiNote('Wikipedia page could not be found automatically. You can add it manually.')
+      setStatusMessage('TMDb details loaded. Wikipedia lookup was unavailable.')
+    } finally {
+      setFetchPhase('idle')
+    }
+  }
 
   async function loadDetails(tmdbId: number, forcePoster = false) {
     setFetchPhase('details')
     setStatusMessage('Loading TMDb details…')
     setError(null)
+    setWikiPickerResults(null)
     try {
       const payload = await fetchTmdbMovie(tmdbId, {
         downloadPoster: true,
@@ -89,8 +138,10 @@ export function AddMoviePage() {
       })
       setFetchPhase(payload.poster?.downloaded ? 'poster' : 'details')
       setValues((current) => applyTmdbFields(current, payload.fields))
-      setLookupTitle(payload.fields.Title || lookupTitle)
-      if (payload.fields.Year) setLookupYear(payload.fields.Year)
+      const title = payload.fields.Title || lookupTitle
+      const year = payload.fields.Year || lookupYear
+      setLookupTitle(title)
+      if (year) setLookupYear(year)
       setLookupTmdbId(String(tmdbId))
       setSelectedTmdbId(tmdbId)
       setFromTmdb(true)
@@ -106,18 +157,17 @@ export function AddMoviePage() {
             : 'Poster saved to public/covers/.',
         )
       } else {
-        const year = parseYear(payload.fields.Year)
-        const local = coverCandidates(payload.fields.Title || '', year, '')[0]
+        const parsed = parseYear(payload.fields.Year)
+        const local = coverCandidates(payload.fields.Title || '', parsed, '')[0]
         setPosterUrl(local ? `${local}?t=${Date.now()}` : null)
         setPosterNote(payload.poster?.message || 'No poster downloaded.')
       }
 
-      setStatusMessage('TMDb details loaded. Review the form, then save.')
       setPickerResults(null)
+      await lookupWikipedia(title, year)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Could not load TMDb details.')
       setStatusMessage('')
-    } finally {
       setFetchPhase('idle')
     }
   }
@@ -128,6 +178,7 @@ export function AddMoviePage() {
     setPickerResults(null)
     setDuplicates(null)
     setAllowDuplicateSave(false)
+    setWikiPickerResults(null)
     setFetchPhase('search')
     setStatusMessage('Searching TMDb…')
 
@@ -257,7 +308,9 @@ export function AddMoviePage() {
         ? 'Loading details…'
         : fetchPhase === 'poster'
           ? 'Downloading poster…'
-          : 'Fetch from TMDb'
+          : fetchPhase === 'wikipedia'
+            ? 'Finding Wikipedia…'
+            : 'Fetch from TMDb'
 
   return (
     <section className="add-movie-page">
@@ -267,7 +320,7 @@ export function AddMoviePage() {
       <header className="add-movie-page__intro">
         <h1>Add a movie</h1>
         <p>
-          Look up title details on TMDb, review the form, then save to{' '}
+          Look up title details on TMDb (and Wikipedia), review the form, then save to{' '}
           <code>Master Film List.xlsx</code>. Disc format, edition, HDR flags, and Rotten Tomatoes
           stay manual.
         </p>
@@ -331,7 +384,7 @@ export function AddMoviePage() {
         </div>
         <p className="add-movie-page__tmdb-note" role="status" aria-live="polite">
           {statusMessage ||
-            'Fetching fills movie metadata only. It does not save the spreadsheet row until you click Save movie.'}
+            'Fetching fills movie metadata and tries to find a Wikipedia link. It does not save until you click Save movie.'}
         </p>
       </div>
 
@@ -346,7 +399,9 @@ export function AddMoviePage() {
           </div>
           <div>
             {fromTmdb ? (
-              <p className="add-movie-page__badge">Fields below were filled from TMDb — review before saving.</p>
+              <p className="add-movie-page__badge">
+                Fields below were filled from TMDb — review before saving.
+              </p>
             ) : null}
             {posterNote ? <p className="add-movie-page__sync">{posterNote}</p> : null}
           </div>
@@ -359,6 +414,12 @@ export function AddMoviePage() {
             <li key={warning}>{warning}</li>
           ))}
         </ul>
+      ) : null}
+
+      {wikiNote ? (
+        <p className="add-movie-page__warnings" role="status">
+          {wikiNote}
+        </p>
       ) : null}
 
       {duplicates && duplicates.length > 0 ? (
@@ -399,12 +460,28 @@ export function AddMoviePage() {
           columns={columns}
           values={values}
           showCatalogId
+          excludeFields={showWikipediaField ? [WIKIPEDIA_FIELD] : []}
           onChange={(field, value) => {
             setValues((current) => ({ ...current, [field]: value }))
             if (field === 'Title') setLookupTitle(value)
             if (field === 'Year') setLookupYear(value)
           }}
         />
+
+        {showWikipediaField ? (
+          <WikipediaLinkField
+            value={values[WIKIPEDIA_FIELD] ?? ''}
+            source={wikiSource}
+            busy={busy}
+            onChange={(value) =>
+              setValues((current) => ({ ...current, [WIKIPEDIA_FIELD]: value }))
+            }
+            onSourceChange={setWikiSource}
+            onSearchAgain={() => {
+              void lookupWikipedia(values.Title || lookupTitle, values.Year || lookupYear)
+            }}
+          />
+        ) : null}
 
         {error ? (
           <p className="add-movie-page__error" role="alert">
@@ -431,6 +508,36 @@ export function AddMoviePage() {
           }}
           onSelect={(result) => {
             void loadDetails(result.tmdbId)
+          }}
+        />
+      ) : null}
+
+      {wikiPickerResults ? (
+        <WikipediaResultPicker
+          results={wikiPickerResults}
+          message={wikiPickerMessage}
+          busy={busy}
+          onSelect={(result) => {
+            setValues((current) => ({ ...current, [WIKIPEDIA_FIELD]: result.url }))
+            setWikiSource('selected')
+            setWikiPickerResults(null)
+            setWikiNote(null)
+            setStatusMessage('Wikipedia article selected. Review the form, then save.')
+          }}
+          onSearchAgain={() => {
+            void lookupWikipedia(values.Title || lookupTitle, values.Year || lookupYear)
+          }}
+          onEnterManual={() => {
+            setWikiPickerResults(null)
+            setWikiSource('manual')
+            setWikiNote(null)
+            setStatusMessage('Enter the Wikipedia URL manually below.')
+          }}
+          onSkip={() => {
+            setWikiPickerResults(null)
+            setWikiSource('not-found')
+            setWikiNote(null)
+            setStatusMessage('Wikipedia skipped. You can still add a link later.')
           }}
         />
       ) : null}

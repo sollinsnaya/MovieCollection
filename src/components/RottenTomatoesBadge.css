@@ -1,0 +1,49 @@
+.rt-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  min-width: 5.5rem;
+  padding: 0.35rem 0.25rem;
+  text-align: center;
+}
+
+.rt-badge__icon {
+  width: 3.4rem;
+  height: 3.4rem;
+  display: block;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+}
+
+.rt-badge__text {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.rt-badge__score {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #f4ebe0;
+}
+
+.rt-badge__label {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.rt-badge--certified-fresh .rt-badge__label {
+  color: #ff8f74;
+}
+
+.rt-badge--fresh .rt-badge__label {
+  color: #ff8f74;
+}
+
+.rt-badge--rotten .rt-badge__label {
+  color: #9dcc6a;
+}
