@@ -19,6 +19,15 @@ npm run build
 Copy `.env` if you use TMDb cover fetching (`TMDB_API_KEY=...`).  
 Keep `Master Film List.xlsx` and `public/covers/` on the server (or commit them).
 
+To download **one** poster while Shelf is running (port 3080):
+
+```bash
+curl -s 'http://127.0.0.1:3080/api/tmdb/search?title=Alien&year=1979'
+curl -X POST http://127.0.0.1:3080/api/tmdb/movie/348/poster \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Alien","year":"1979","force":true}'
+```
+
 ## Run for the household
 
 ```bash

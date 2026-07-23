@@ -7,7 +7,7 @@ Shelf is a **local-only** web app for browsing a physical movie collection (DVD,
 - Feel like a personal media library, not a spreadsheet viewer
 - Run entirely on the home computer (no paid cloud service required)
 - Keep loading, filtering, moods, covers, and UI in separate modules
-- Make it easy to add titles (via CSV) and posters (via local files or TMDb fetch script)
+- Make it easy to add titles (via Excel) and posters (via UI, API, local files, or batch script)
 
 ## Technology stack
 
@@ -15,9 +15,9 @@ Shelf is a **local-only** web app for browsing a physical movie collection (DVD,
 | --- | --- | --- |
 | UI | React + TypeScript + Vite | Fast local dev, modular components |
 | Routing | React Router | Catalog, browse, detail, help pages |
-| Spreadsheet | Repo-root CSV + Papa Parse | Single file committed with the project |
+| Spreadsheet | Repo-root Excel (`xlsx`) | `Master Film List.xlsx` committed with the project |
 | Covers | Static files in `public/covers/` | App only displays local images |
-| Cover download | Node script + TMDb API | Optional offline poster fetch; separate from the UI |
+| Cover download | Server API, UI upload, or batch script | One-off via `POST /api/tmdb/.../poster` or Add/Replace cover; batch via `npm run fetch-covers` |
 | Moods | `localStorage` | Persists on this computer/browser without a database |
 
 ## High-level architecture
@@ -153,9 +153,22 @@ flowchart LR
 - `GET /api/movies/duplicates?title=&year=` — probable duplicate check before save  
 - `GET /api/tmdb/search` — title/year/TMDb ID search (credentials stay on the server)  
 - `GET /api/tmdb/movie/:tmdbId` — details + spreadsheet field mapping + optional poster download  
-- `POST /api/tmdb/movie/:tmdbId/poster` — download/replace local cover  
+- `POST /api/tmdb/movie/:tmdbId/poster` — download/replace one local cover (usable via `curl` on the server)  
+- `GET /api/wikipedia/search` — English Wikipedia discovery for `Wikipedia Link`  
+- `GET /api/covers/status` / `POST /api/covers/upload` — manual cover add/replace from the UI  
 
 `npm run dev` starts the API and the web UI together. House/LAN mode uses `npm start` / systemd on port 3080.
+
+### One-off cover download (server)
+
+Prefer this when you only need a single title (instead of `npm run fetch-covers`):
+
+```bash
+curl -s 'http://127.0.0.1:3080/api/tmdb/search?title=Alien&year=1979'
+curl -X POST http://127.0.0.1:3080/api/tmdb/movie/348/poster \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Alien","year":"1979","force":true}'
+```
 
 ### TMDb-assisted Add Movie
 
@@ -184,7 +197,7 @@ The UI never talks to TMDb directly. Poster files are stored locally; `/covers` 
 | Cover image (fallback) | `Catalog ID.jpg` | `public/covers/MC-0001.jpg` |
 | Moods | `Catalog ID` → list of mood labels | Browser `localStorage` key `shelf-moods-v1` |
 
-The catalog displays local files under `public/covers/`. Add Movie can download a poster via the server API; the batch script `npm run fetch-covers` remains available.
+The catalog displays local files under `public/covers/`. Add Movie can download a poster via the server API; the movie page can upload/replace covers; a single poster can be requested with `curl` against `POST /api/tmdb/movie/:tmdbId/poster`; the batch script `npm run fetch-covers` fills missing covers only (existing local files are skipped unless `--force`).
 
 ## Spreadsheet normalization
 
@@ -197,7 +210,7 @@ The spreadsheet columns are preserved as-is for the detail page. Derived display
 | Director | Prefer verified/researched director when present (legacy sheets) |
 | Disc format | Split on `/` for filters (e.g. `UHD 4K / Blu-ray`) |
 | Franchise | Long verification notes excluded from browse/filter chips |
-| Genre | Exact `Genre` cell values used for filters and Browse |
+| Genre | Split on `;` for filters and Browse (e.g. `Satire; psychological horror`); multi-select uses AND |
 | Empty cells | Shown as `—` in the UI |
 
 ## User-facing screens
@@ -205,7 +218,7 @@ The spreadsheet columns are preserved as-is for the detail page. Derived display
 1. **Collection** — searchable, sortable, filterable card grid  
 2. **Browse** — jump in by format, genre, studio, edition, franchise, boutique, or mood  
 3. **Movie detail** — full spreadsheet fields + mood picker  
-4. **Help** — plain-language guide for adding movies and updating covers  
+4. **Help** — plain-language guide for adding movies, Wikipedia links, and covers (including one-off API download)  
 
 ## Design language
 
@@ -219,11 +232,13 @@ The spreadsheet columns are preserved as-is for the detail page. Derived display
 
 - Runs locally; collection data stays on the machine
 - TMDb is contacted only from the Express server (Add Movie fetch, poster download, or `npm run fetch-covers`)
+- Wikipedia is contacted only from the Express server (`GET /api/wikipedia/search` or `npm run find-wikipedia-pages`)
 - API credentials live in `.env` (not committed) and are never returned to the browser
 - Collection spreadsheet is the project-root Excel file (`Master Film List.xlsx`)
 
 ## Related docs
 
 - [README.md](../README.md) — setup and run commands  
-- [public/covers/README.md](../public/covers/README.md) — cover filename rules and fetch script  
+- [public/covers/README.md](../public/covers/README.md) — cover filename rules, one-off API, and batch fetch  
+- [DEPLOY-FEDORA.md](./DEPLOY-FEDORA.md) — house/LAN systemd setup  
 - In-app **Help** page — non-technical how-to for day-to-day use  

@@ -14,7 +14,7 @@
     "fetch-covers": "node scripts/fetch-covers.mjs",
     "find-wikipedia-pages": "node scripts/find-wikipedia-pages.mjs",
     "restart": "bash scripts/restart-dev.sh",
-    "test": "node --test server/tmdb/tmdb.test.mjs server/coverUpload.test.mjs server/wikipedia/wikipedia.test.mjs"
+    "test": "node --test server/tmdb/tmdb.test.mjs server/coverUpload.test.mjs server/wikipedia/wikipedia.test.mjs server/filters.split.test.mjs"
   },
   "dependencies": {
     "@fontsource/fraunces": "^5.2.9",

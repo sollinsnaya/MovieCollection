@@ -2,6 +2,11 @@
 /**
  * Download TMDb posters for each title in the collection spreadsheet.
  *
+ * By default, any title that already has a local cover is skipped — including
+ * .jpg/.jpeg/.png/.webp and Catalog ID fallbacks — so manual replacements are
+ * never overwritten by a later batch run. Pass --force only when you intend
+ * to replace existing files.
+ *
  * Usage:
  *   1. Copy .env.example → .env and set TMDB_API_KEY
  *   2. npm run fetch-covers
@@ -18,6 +23,7 @@ import { fileURLToPath } from 'node:url'
 import { pipeline } from 'node:stream/promises'
 import { Readable } from 'node:stream'
 import * as XLSX from 'xlsx'
+import { findCoverFiles } from '../server/coverUpload.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -283,6 +289,12 @@ async function main() {
 
   console.log(`Processing ${movies.length} titles…`)
 
+  if (!opts.force) {
+    console.log('Existing covers are left alone (use --force to overwrite).')
+  } else {
+    console.log('WARNING: --force will overwrite existing local covers.')
+  }
+
   for (const movie of movies) {
     const stem = coverFileStem(movie.title, movie.year)
     if (!stem) {
@@ -292,10 +304,12 @@ async function main() {
 
     const destPath = join(COVERS_DIR, `${stem}.jpg`)
     const label = `${movie.title}${movie.year ? ` (${movie.year})` : ''}`
+    const existing = findCoverFiles(movie.title, movie.year, movie.catalogId, COVERS_DIR)
 
-    if (!opts.force && existsSync(destPath)) {
-      report.skippedExisting.push({ catalogId: movie.catalogId, file: `${stem}.jpg` })
-      console.log(`skip  ${label}`)
+    if (!opts.force && existing.length > 0) {
+      const file = existing[0].filename
+      report.skippedExisting.push({ catalogId: movie.catalogId, file })
+      console.log(`skip  ${label} (has ${file})`)
       continue
     }
 

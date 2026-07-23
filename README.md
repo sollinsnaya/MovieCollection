@@ -18,11 +18,13 @@ For a plain-language how-to inside the running app, open the **Help** page.
 - Cover images via filename convention (no app code changes)
 - In-app Help page for adding movies and updating covers
 - Add / edit / delete spreadsheet rows from the app (via local API)
-- **Fetch from TMDb** on the Add page: search, pick ambiguous matches, prefill metadata, download a local poster
+- **Fetch from TMDb** on the Add page: search, pick ambiguous matches, prefill metadata, download a local poster, discover Wikipedia Link
+- Manual **Add / Replace cover** on movie pages
+- Single-cover download via API (`curl`) without running the full batch script
 
 ### Spreadsheet notes
 
-- Genre comes from the `Genre` column and is available in filters and Browse.
+- Genre comes from the `Genre` column. Multiple genres in one cell are separated by `;` (e.g. `Satire; psychological horror; black comedy`) and each becomes its own filter/Browse option. Selecting several genre filters narrows to titles that include all of them.
 - Boutique Label is often empty in the sheet.
 - Long verification-style Franchise values are excluded from browse/filter options.
 - Rotten Tomatoes and all physical-edition columns stay manual — TMDb never fills ratings or disc flags.
@@ -99,19 +101,31 @@ public/covers/Argo (2012).jpg
 
 Fallback: `public/covers/MC-0001.jpg`
 
-### Fetch posters from TMDb (one-time / occasional)
+### Fetch one poster (API, while Shelf is running)
 
-The app only displays local files. Use the helper script to download posters:
+On the house server (default port **3080**):
 
-1. Get a free API key: https://www.themoviedb.org/settings/api  
-2. `cp .env.example .env` and set `TMDB_API_KEY`  
-3. Run:
+```bash
+# Find TMDb ID
+curl -s 'http://127.0.0.1:3080/api/tmdb/search?title=Alien&year=1979'
+
+# Download / replace that poster
+curl -X POST http://127.0.0.1:3080/api/tmdb/movie/348/poster \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Alien","year":"1979","force":true}'
+```
+
+Omit `"force":true` to keep an existing `Title (Year).jpg` unchanged.
+
+You can also upload or replace a cover from the movie detail page in the browser (**Add cover** / **Replace cover**).
+
+### Fetch posters in batch (optional)
 
 ```bash
 npm run fetch-covers
 ```
 
-Options: `--limit 5`, `--dry-run`, `--force`  
+By default, titles that already have any local cover are skipped (manual replacements are preserved). Options: `--limit 5` (first N spreadsheet rows only), `--dry-run`, `--force` (overwrite existing covers).  
 See `public/covers/README.md`.
 
 ## Project layout

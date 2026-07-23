@@ -30,6 +30,15 @@ export function splitFormats(discFormat: string): string[] {
     .filter(Boolean)
 }
 
+/** Split multi-genre cells like "Satire; psychological horror; black comedy". */
+export function splitGenres(genre: string): string[] {
+  if (!genre.trim()) return []
+  return genre
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+}
+
 /**
  * Franchise currently mixes real franchise names with verification notes.
  * Keep short, label-like values for browsing/filters.
@@ -71,7 +80,7 @@ export function collectFilterOptions(movies: Movie[]) {
       .filter((value) => isBrowseableFranchise(value)),
   )
   const studios = uniqueSorted(movies.map((movie) => studioLabel(movie)).filter(Boolean))
-  const genres = uniqueSorted(movies.map((movie) => movie.genre).filter(Boolean))
+  const genres = uniqueSorted(movies.flatMap((movie) => splitGenres(movie.genre)))
 
   return { formats, editions, boutiques, franchises, studios, genres }
 }
@@ -130,7 +139,9 @@ export function filterMovies({ movies, filters, moodMap }: FilterMoviesArgs): Mo
     }
 
     if (filters.genres.length > 0) {
-      if (!filters.genres.includes(movie.genre)) return false
+      const tokens = splitGenres(movie.genre)
+      // Every selected genre must appear (AND) so adding chips narrows the list.
+      if (!filters.genres.every((genre) => tokens.includes(genre))) return false
     }
 
     if (filters.moods.length > 0) {
@@ -186,7 +197,7 @@ export function buildBrowseGroups(
         }
         break
       case 'genre':
-        bump(movie.genre)
+        for (const genre of splitGenres(movie.genre)) bump(genre)
         break
       case 'boutique':
         bump(movie.boutiqueLabel)

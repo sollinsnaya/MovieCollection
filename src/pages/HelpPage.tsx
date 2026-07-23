@@ -42,7 +42,8 @@ export function HelpPage() {
           <li>
             If several matches appear, pick the correct one. The form fills with title, year,
             director, runtime, genre, studio, franchise, and plot summary, and a poster is saved
-            under <code>public/covers/</code>.
+            under <code>public/covers/</code>. Shelf also tries to find an English Wikipedia page
+            for <code>Wikipedia Link</code>.
           </li>
           <li>
             Review the fields. Fill in physical-copy details yourself (disc format, edition,
@@ -95,7 +96,38 @@ export function HelpPage() {
           exists, it is left alone unless you use <strong>Retry poster download</strong>.
         </p>
 
-        <h3>Option B — Batch download script</h3>
+        <h3>Option B — Upload from the movie page</h3>
+        <p>
+          Open any title and use <strong>Add cover</strong> or <strong>Replace cover</strong> under
+          the artwork. Choose a JPEG, PNG, or WebP from your device. Shelf saves it as{' '}
+          <code>Title (Year).jpg</code> in <code>public/covers/</code>. Replacing a cover deletes the
+          previous local image file(s) for that title.
+        </p>
+
+        <h3>Option C — One cover from the server (API)</h3>
+        <p>
+          When Shelf is running on the house server, you can download a single poster without running
+          the full batch script. On the server:
+        </p>
+        <ol>
+          <li>
+            Find the TMDb ID (search by title/year):
+            <pre>{`curl -s 'http://127.0.0.1:3080/api/tmdb/search?title=Alien&year=1979'`}</pre>
+          </li>
+          <li>
+            Download that poster (example TMDb ID <code>348</code> for Alien):
+            <pre>{`curl -X POST http://127.0.0.1:3080/api/tmdb/movie/348/poster \\
+  -H 'Content-Type: application/json' \\
+  -d '{"title":"Alien","year":"1979","force":true}'`}</pre>
+          </li>
+          <li>Refresh the browser. The file is saved under <code>public/covers/</code>.</li>
+        </ol>
+        <p>
+          Use <code>"force":true</code> only when you want to replace an existing cover. Without it,
+          an existing <code>Title (Year).jpg</code> is left unchanged.
+        </p>
+
+        <h3>Option D — Batch download script</h3>
         <ol>
           <li>Save any new or edited movies first.</li>
           <li>
@@ -105,19 +137,18 @@ export function HelpPage() {
           <li>Refresh the browser after it finishes.</li>
         </ol>
         <p>
-          Both Option A and Option B need a free TMDb key in a local <code>.env</code> file (see{' '}
+          Titles that already have a local cover (any of <code>.jpg</code>, <code>.png</code>,{' '}
+          <code>.webp</code>, or a catalog-ID file) are skipped, so covers you replaced by hand stay
+          put. Useful flags: <code>--limit 5</code> (first N rows only), <code>--dry-run</code>. Use{' '}
+          <code>--force</code> only when you intentionally want TMDb to overwrite existing files.
+          Prefer Option C when you only need one title.
+        </p>
+        <p>
+          Options A–D that talk to TMDb need a free key in a local <code>.env</code> file (see{' '}
           <code>.env.example</code>). The key stays on the server and is never sent to the browser.
         </p>
 
-        <h3>Option C — Upload from the movie page</h3>
-        <p>
-          Open any title and use <strong>Add cover</strong> or <strong>Replace cover</strong> under
-          the artwork. Choose a JPEG, PNG, or WebP from your device. Shelf saves it as{' '}
-          <code>Title (Year).jpg</code> in <code>public/covers/</code>. Replacing a cover deletes the
-          previous local image file(s) for that title.
-        </p>
-
-        <h3>Option D — Add a picture by hand</h3>
+        <h3>Option E — Add a picture by hand</h3>
         <ol>
           <li>
             Put a JPEG (or PNG) image into the <code>public/covers/</code> folder.
@@ -174,6 +205,11 @@ export function HelpPage() {
           <li>
             <strong>Cover missing after fetch:</strong> confirm the file exists under{' '}
             <code>public/covers/Title (Year).jpg</code> and that the folder is writable.
+          </li>
+          <li>
+            <strong>Need one cover only:</strong> use the API curl commands in{' '}
+            <strong>Option C</strong> above (or Add/Replace cover on the movie page) instead of{' '}
+            <code>npm run fetch-covers</code>.
           </li>
           <li>
             <strong>Blank page on LAN:</strong> open <code>http://&lt;server-ip&gt;:3080/</code>{' '}
