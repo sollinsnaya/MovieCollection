@@ -31,9 +31,16 @@ const PRIMARY_FIELDS = [
   'Spoiler Free Summary',
 ] as const
 
-/** Shown as icons / special UI — keep out of the plain fields list. */
+/** Shown above / as special UI — keep out of the Film Credits list when browsing. */
 function isHiddenDetailField(field: string): boolean {
-  return isBooleanField(field) || field === 'Disc Format' || field === WIKIPEDIA_FIELD
+  return (
+    isBooleanField(field) ||
+    field === 'Disc Format' ||
+    field === WIKIPEDIA_FIELD ||
+    field === 'Title' ||
+    field === 'Year' ||
+    field === 'Rotten Tomatoes Critic Score'
+  )
 }
 
 function fieldEntries(movie: Movie): Array<[string, string]> {
@@ -62,8 +69,27 @@ function displayLabel(field: string): string {
   return field === 'DTS-HD  MA' ? 'DTS-HD MA' : field
 }
 
+/** Boolean fields shown as logos — omit from the Disc & audio features checkbox grid. */
+const BADGE_ONLY_BOOLEAN_FIELDS = new Set([
+  'Steelbook',
+  'HDR10',
+  'HDR10+',
+  'Dolby Vision',
+  'Dolby Atmos',
+  'Dolby True HD',
+  'Dolby Digital',
+  'Dolby Surround',
+  'Stereo',
+  'DTS:X',
+  'DTS-HD  MA',
+  '7.1',
+  '5.1',
+])
+
 function BooleanFeaturesReadout({ fields }: { fields: MovieRecord }) {
-  const present = BOOLEAN_FIELDS.filter((field) => field in fields)
+  const present = BOOLEAN_FIELDS.filter(
+    (field) => field in fields && !BADGE_ONLY_BOOLEAN_FIELDS.has(field),
+  )
   if (present.length === 0) return null
 
   return (
@@ -214,7 +240,16 @@ export function MovieDetailPage() {
         </div>
         <div className="movie-detail__summary">
           <p className="movie-detail__id">{movie.catalogId}</p>
-          <h1>{movie.title}</h1>
+          <div className="movie-detail__title-row">
+            <h1>{movie.title}</h1>
+            {isBooleanTruthy(movie.fields.Steelbook) ? (
+              <img
+                className="movie-detail__steelbook"
+                src="/format-logos/steelbook.jpg"
+                alt="Steelbook"
+              />
+            ) : null}
+          </div>
           <p className="movie-detail__sub">
             {[movie.year ?? 'Year unknown', movie.director].filter(Boolean).join(' · ')}
           </p>
@@ -222,6 +257,18 @@ export function MovieDetailPage() {
           {movie.plotSummary ||
           movie.fields['Rotten Tomatoes Critic Score'] ||
           movie.discFormat ||
+          isBooleanTruthy(movie.fields['Dolby Digital']) ||
+          isBooleanTruthy(movie.fields['Dolby Surround']) ||
+          isBooleanTruthy(movie.fields['Dolby Atmos']) ||
+          isBooleanTruthy(movie.fields['Dolby True HD']) ||
+          isBooleanTruthy(movie.fields.Stereo) ||
+          isBooleanTruthy(movie.fields['DTS:X']) ||
+          isBooleanTruthy(movie.fields['DTS-HD  MA']) ||
+          isBooleanTruthy(movie.fields['7.1']) ||
+          isBooleanTruthy(movie.fields['5.1']) ||
+          isBooleanTruthy(movie.fields['Dolby Vision']) ||
+          isBooleanTruthy(movie.fields.HDR10) ||
+          isBooleanTruthy(movie.fields['HDR10+']) ||
           isHttpUrl(movie.fields[WIKIPEDIA_FIELD] ?? '') ? (
             <div className="movie-detail__plot-block">
               {movie.plotSummary || movie.fields['Rotten Tomatoes Critic Score'] ? (
@@ -234,7 +281,21 @@ export function MovieDetailPage() {
                   <RottenTomatoesBadge scoreValue={movie.fields['Rotten Tomatoes Critic Score']} />
                 </div>
               ) : null}
-              <DiscFormatBadges discFormat={movie.discFormat} />
+              <DiscFormatBadges
+                discFormat={movie.discFormat}
+                dolbyDigital={movie.fields['Dolby Digital']}
+                dolbySurround={movie.fields['Dolby Surround']}
+                dolbyAtmos={movie.fields['Dolby Atmos']}
+                dolbyTrueHd={movie.fields['Dolby True HD']}
+                stereo={movie.fields.Stereo}
+                dtsX={movie.fields['DTS:X']}
+                dtsHd={movie.fields['DTS-HD  MA']}
+                surround71={movie.fields['7.1']}
+                surround51={movie.fields['5.1']}
+                dolbyVision={movie.fields['Dolby Vision']}
+                hdr10={movie.fields.HDR10}
+                hdr10Plus={movie.fields['HDR10+']}
+              />
               {isHttpUrl(movie.fields[WIKIPEDIA_FIELD] ?? '') ? (
                 <p className="movie-detail__wikipedia">
                   <a

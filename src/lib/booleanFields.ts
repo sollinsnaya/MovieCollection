@@ -6,10 +6,13 @@ export const BOOLEAN_FIELDS = [
   'Dolby Vision',
   'Dolby Atmos',
   'Dolby True HD',
+  'Dolby Digital',
+  'Dolby Surround',
   'DTS:X',
   'DTS-HD  MA',
   '7.1',
   '5.1',
+  'Stereo',
 ] as const
 
 export type BooleanField = (typeof BOOLEAN_FIELDS)[number]

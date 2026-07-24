@@ -68,6 +68,14 @@ function Field({
   )
 }
 
+/** Checking one clears its mutually exclusive partner. */
+const BOOLEAN_EXCLUSIONS: Record<string, string> = {
+  '5.1': '7.1',
+  '7.1': '5.1',
+  'DTS:X': 'DTS-HD  MA',
+  'DTS-HD  MA': 'DTS:X',
+}
+
 function BooleanFieldGroup({
   fields,
   values,
@@ -78,6 +86,15 @@ function BooleanFieldGroup({
   onChange: (field: string, value: string) => void
 }) {
   if (fields.length === 0) return null
+
+  function setExclusive(field: string, checked: boolean) {
+    onChange(field, booleanToSpreadsheet(checked))
+    if (!checked) return
+    const partner = BOOLEAN_EXCLUSIONS[field]
+    if (partner && fields.includes(partner)) {
+      onChange(partner, booleanToSpreadsheet(false))
+    }
+  }
 
   return (
     <fieldset className="movie-form__booleans">
@@ -92,9 +109,7 @@ function BooleanFieldGroup({
                 id={id}
                 type="checkbox"
                 checked={checked}
-                onChange={(event) =>
-                  onChange(field, booleanToSpreadsheet(event.target.checked))
-                }
+                onChange={(event) => setExclusive(field, event.target.checked)}
               />
               <span>{field === 'DTS-HD  MA' ? 'DTS-HD MA' : field}</span>
             </label>

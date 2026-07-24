@@ -1,9 +1,46 @@
 .disc-badges {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.disc-badges__row {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.45rem;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  width: 100%;
+}
+
+.disc-badges__formats,
+.disc-badges__audio,
+.disc-badges__hdr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.disc-badges__spacer {
   flex: 0 0 auto;
+  min-width: 0;
+}
+
+.disc-badges__audio {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
+}
+
+/* Keep HDR under the synopsis block, flush to its right edge. */
+.disc-badges__hdr {
+  margin-left: auto;
+  justify-content: flex-end;
+  max-width: 100%;
 }
 
 .disc-badge {
@@ -17,11 +54,4 @@
   display: block;
   border-radius: 4px;
   object-fit: contain;
-}
-
-/* DVD logo ships on white — keep a light plate so it stays readable on dark UI. */
-.disc-badge--dvd .disc-badge__image {
-  background: #fff;
-  padding: 0.2rem 0.35rem;
-  box-sizing: border-box;
 }

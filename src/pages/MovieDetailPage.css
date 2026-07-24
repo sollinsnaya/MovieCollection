@@ -112,12 +112,32 @@
   color: var(--accent-soft);
 }
 
-.movie-detail__summary h1 {
+.movie-detail__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2cm;
   margin: 0 0 0.6rem;
+}
+
+.movie-detail__summary h1 {
+  margin: 0;
   font-family: var(--font-display);
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 500;
   line-height: 1.05;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.movie-detail__steelbook {
+  flex: 0 1 auto;
+  display: block;
+  height: clamp(2.45rem, 4.9vw, 3.85rem);
+  width: auto;
+  max-width: min(25.2rem, 100%);
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
 }
 
 .movie-detail__sub,
@@ -153,7 +173,7 @@
 }
 
 .movie-detail__plot-block .disc-badges {
-  align-items: flex-start;
+  width: 100%;
 }
 
 .movie-detail__wikipedia {
