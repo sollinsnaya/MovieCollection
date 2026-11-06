@@ -7,6 +7,7 @@ import { BrowsePage } from './pages/BrowsePage'
 import { CatalogPage } from './pages/CatalogPage'
 import { HelpPage } from './pages/HelpPage'
 import { MovieDetailPage } from './pages/MovieDetailPage'
+import { TonightPage } from './pages/TonightPage'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
             <Route element={<AppShell />}>
               <Route index element={<CatalogPage />} />
               <Route path="browse" element={<BrowsePage />} />
+              <Route path="tonight" element={<TonightPage />} />
               <Route path="help" element={<HelpPage />} />
               <Route path="add" element={<AddMoviePage />} />
               <Route path="movie/:catalogId" element={<MovieDetailPage />} />

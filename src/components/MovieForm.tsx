@@ -1,10 +1,12 @@
 import type { MovieRecord } from '../types/movie'
 import {
-  booleanFieldsInColumns,
+  audioBooleanFieldsInColumns,
   booleanToSpreadsheet,
   isBooleanField,
   isBooleanTruthy,
+  videoBooleanFieldsInColumns,
 } from '../lib/booleanFields'
+import { splitFormats } from '../lib/filters'
 import './MovieForm.css'
 
 /** Fields shown first when adding/editing. Remaining columns appear under “More fields”. */
@@ -21,7 +23,10 @@ export const FEATURED_FIELDS = [
   'Runtime (min)',
   'Spoiler Free Summary',
   'Rotten Tomatoes Critic Score',
+  'Trailer URL',
 ] as const
+
+export const DISC_FORMAT_OPTIONS = ['DVD', 'Blu-ray', 'UHD 4K', 'VHS'] as const
 
 type MovieFormProps = {
   columns: string[]
@@ -68,19 +73,63 @@ function Field({
   )
 }
 
+function DiscFormatField({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
+  const selected = new Set(splitFormats(value))
+
+  function toggle(option: string) {
+    const next = new Set(selected)
+    if (next.has(option)) next.delete(option)
+    else next.add(option)
+    const ordered = DISC_FORMAT_OPTIONS.filter((item) => next.has(item))
+    onChange(ordered.join('; '))
+  }
+
+  return (
+    <fieldset className="movie-form__disc-format">
+      <legend>Disc Format</legend>
+      <div className="movie-form__checkbox-grid">
+        {DISC_FORMAT_OPTIONS.map((option) => {
+          const id = `disc-format-${option.replace(/[^a-zA-Z0-9]+/g, '-')}`
+          return (
+            <label key={option} className="movie-form__checkbox" htmlFor={id}>
+              <input
+                id={id}
+                type="checkbox"
+                checked={selected.has(option)}
+                onChange={() => toggle(option)}
+              />
+              <span>{option}</span>
+            </label>
+          )
+        })}
+      </div>
+    </fieldset>
+  )
+}
+
 /** Checking one clears its mutually exclusive partner. */
 const BOOLEAN_EXCLUSIONS: Record<string, string> = {
   '5.1': '7.1',
   '7.1': '5.1',
   'DTS:X': 'DTS-HD  MA',
   'DTS-HD  MA': 'DTS:X',
+  Stereo: 'Mono',
+  Mono: 'Stereo',
 }
 
 function BooleanFieldGroup({
+  legend,
   fields,
   values,
   onChange,
 }: {
+  legend: string
   fields: string[]
   values: MovieRecord
   onChange: (field: string, value: string) => void
@@ -91,14 +140,14 @@ function BooleanFieldGroup({
     onChange(field, booleanToSpreadsheet(checked))
     if (!checked) return
     const partner = BOOLEAN_EXCLUSIONS[field]
-    if (partner && fields.includes(partner)) {
+    if (partner) {
       onChange(partner, booleanToSpreadsheet(false))
     }
   }
 
   return (
     <fieldset className="movie-form__booleans">
-      <legend>Disc &amp; audio features</legend>
+      <legend>{legend}</legend>
       <div className="movie-form__checkbox-grid">
         {fields.map((field) => {
           const checked = isBooleanTruthy(values[field])
@@ -129,12 +178,23 @@ export function MovieForm({
   excludeFields = [],
 }: MovieFormProps) {
   const excluded = new Set(excludeFields)
-  const booleanFields = booleanFieldsInColumns(columns).filter((field) => !excluded.has(field))
-  const booleanSet = new Set(booleanFields)
-  const featured = FEATURED_FIELDS.filter(
-    (field) => columns.includes(field) && !booleanSet.has(field) && !excluded.has(field),
+  const videoFields = videoBooleanFieldsInColumns(columns).filter((field) => !excluded.has(field))
+  const audioFields = audioBooleanFieldsInColumns(columns).filter((field) => !excluded.has(field))
+  const otherBooleans = columns.filter(
+    (column) =>
+      isBooleanField(column) &&
+      !excluded.has(column) &&
+      !videoFields.includes(column) &&
+      !audioFields.includes(column),
   )
-  const featuredSet = new Set<string>(featured)
+  const featured = FEATURED_FIELDS.filter(
+    (field) =>
+      columns.includes(field) &&
+      !isBooleanField(field) &&
+      !excluded.has(field) &&
+      field !== 'Disc Format',
+  )
+  const featuredSet = new Set<string>([...featured, 'Disc Format'])
   const rest = columns.filter((column) => {
     if (column === 'Catalog ID') return false
     if (column === 'Last Updated') return false
@@ -164,7 +224,31 @@ export function MovieForm({
         />
       ))}
 
-      <BooleanFieldGroup fields={booleanFields} values={values} onChange={onChange} />
+      {columns.includes('Disc Format') && !excluded.has('Disc Format') ? (
+        <DiscFormatField
+          value={values['Disc Format'] ?? ''}
+          onChange={(value) => onChange('Disc Format', value)}
+        />
+      ) : null}
+
+      <BooleanFieldGroup
+        legend="Video features"
+        fields={videoFields}
+        values={values}
+        onChange={onChange}
+      />
+      <BooleanFieldGroup
+        legend="Audio features"
+        fields={audioFields}
+        values={values}
+        onChange={onChange}
+      />
+      <BooleanFieldGroup
+        legend="Other features"
+        fields={otherBooleans}
+        values={values}
+        onChange={onChange}
+      />
 
       {rest.length > 0 ? (
         <details className="movie-form__more">

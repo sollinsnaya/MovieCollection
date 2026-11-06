@@ -56,6 +56,7 @@
   margin-top: 0.9rem;
 }
 
+.movie-form__disc-format,
 .movie-form__booleans {
   margin: 0;
   padding: 0.85rem 0.95rem;
@@ -64,6 +65,7 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
+.movie-form__disc-format legend,
 .movie-form__booleans legend {
   padding: 0 0.35rem;
   font-size: 0.82rem;

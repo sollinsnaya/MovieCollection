@@ -21,13 +21,32 @@ export const EMPTY_FILTERS: CatalogFilters = {
   moods: [],
 }
 
-/** Split compound disc formats like "UHD 4K / Blu-ray". */
+/** Split compound disc formats like "UHD 4K; Blu-ray" or "UHD 4K / Blu-ray". */
 export function splitFormats(discFormat: string): string[] {
   if (!discFormat.trim()) return []
   return discFormat
-    .split('/')
+    .split(/[;/]/)
     .map((part) => part.trim())
     .filter(Boolean)
+}
+
+/** Case-insensitive unique list; keeps first-seen casing as the display label. */
+export function uniqueSortedCaseInsensitive(values: string[]): string[] {
+  const byKey = new Map<string, string>()
+  for (const value of values) {
+    const trimmed = value.trim()
+    if (!trimmed) continue
+    const key = trimmed.toLowerCase()
+    if (!byKey.has(key)) byKey.set(key, trimmed)
+  }
+  return Array.from(byKey.values()).sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: 'base' }),
+  )
+}
+
+export function includesCaseInsensitive(haystack: string[], needle: string): boolean {
+  const want = needle.trim().toLowerCase()
+  return haystack.some((item) => item.trim().toLowerCase() === want)
 }
 
 /** Split multi-genre cells like "Satire; psychological horror; black comedy". */
@@ -79,8 +98,10 @@ export function collectFilterOptions(movies: Movie[]) {
       .map((movie) => movie.franchiseCollection)
       .filter((value) => isBrowseableFranchise(value)),
   )
-  const studios = uniqueSorted(movies.map((movie) => studioLabel(movie)).filter(Boolean))
-  const genres = uniqueSorted(movies.flatMap((movie) => splitGenres(movie.genre)))
+  const studios = uniqueSortedCaseInsensitive(
+    movies.map((movie) => studioLabel(movie)).filter(Boolean),
+  )
+  const genres = uniqueSortedCaseInsensitive(movies.flatMap((movie) => splitGenres(movie.genre)))
 
   return { formats, editions, boutiques, franchises, studios, genres }
 }
@@ -119,7 +140,7 @@ export function filterMovies({ movies, filters, moodMap }: FilterMoviesArgs): Mo
   return movies.filter((movie) => {
     if (filters.formats.length > 0) {
       const tokens = splitFormats(movie.discFormat)
-      if (!filters.formats.some((format) => tokens.includes(format))) return false
+      if (!filters.formats.some((format) => includesCaseInsensitive(tokens, format))) return false
     }
 
     if (filters.editions.length > 0) {
@@ -135,13 +156,13 @@ export function filterMovies({ movies, filters, moodMap }: FilterMoviesArgs): Mo
     }
 
     if (filters.studios.length > 0) {
-      if (!filters.studios.includes(studioLabel(movie))) return false
+      if (!includesCaseInsensitive(filters.studios, studioLabel(movie))) return false
     }
 
     if (filters.genres.length > 0) {
       const tokens = splitGenres(movie.genre)
       // Every selected genre must appear (AND) so adding chips narrows the list.
-      if (!filters.genres.every((genre) => tokens.includes(genre))) return false
+      if (!filters.genres.every((genre) => includesCaseInsensitive(tokens, genre))) return false
     }
 
     if (filters.moods.length > 0) {
@@ -173,11 +194,15 @@ export function buildBrowseGroups(
   category: BrowseCategory,
   moodMap: Record<string, Mood[]>,
 ): BrowseGroup[] {
-  const counts = new Map<string, number>()
+  const counts = new Map<string, { label: string; count: number }>()
+  const caseFold = category === 'genre' || category === 'studio'
 
   const bump = (label: string) => {
     if (!label) return
-    counts.set(label, (counts.get(label) ?? 0) + 1)
+    const key = caseFold ? label.trim().toLowerCase() : label
+    const existing = counts.get(key)
+    if (existing) existing.count += 1
+    else counts.set(key, { label, count: 1 })
   }
 
   for (const movie of movies) {
@@ -208,8 +233,8 @@ export function buildBrowseGroups(
     }
   }
 
-  return Array.from(counts.entries())
-    .map(([label, count]) => ({ key: label, label, count }))
+  return Array.from(counts.values())
+    .map(({ label, count }) => ({ key: label, label, count }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
 }
 

@@ -172,6 +172,33 @@ app.delete('/api/movies/:catalogId', (req, res) => {
   }
 })
 
+app.post('/api/columns', (req, res) => {
+  try {
+    const name = String(req.body?.name ?? '').trim()
+    if (!name) {
+      res.status(400).json({ error: 'Column name is required.' })
+      return
+    }
+    if (/[\r\n]/.test(name)) {
+      res.status(400).json({ error: 'Column name cannot contain line breaks.' })
+      return
+    }
+
+    let { columns, rows, sheetName } = readCollection()
+    if (columns.includes(name)) {
+      res.status(409).json({ error: `Column “${name}” already exists.`, columns })
+      return
+    }
+
+    columns = [...columns, name]
+    rows = rows.map((row) => ({ ...row, [name]: row[name] ?? '' }))
+    const write = writeCollection(columns, rows, sheetName)
+    res.status(201).json({ name, columns, ...write })
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) })
+  }
+})
+
 /** Always serve the repo-root spreadsheet (not a stale dist copy). */
 app.get(`/data/${COLLECTION_FILE_NAME}`, (_req, res) => {
   if (!existsSync(COLLECTION_PATH)) {

@@ -2,13 +2,14 @@ import { isBooleanTruthy } from '../lib/booleanFields'
 import { splitFormats } from '../lib/filters'
 import './DiscFormatBadges.css'
 
-export type DiscFormatKind = 'uhd' | 'bluray' | 'dvd'
+export type DiscFormatKind = 'uhd' | 'bluray' | 'dvd' | 'vhs'
 export type AudioBadgeKind =
   | 'dolby-digital'
   | 'dolby-surround'
   | 'dolby-atmos'
   | 'dolby-truehd'
   | 'stereo'
+  | 'mono'
   | 'dts-x'
   | 'dts-hd'
   | 'audio-7-1'
@@ -20,11 +21,13 @@ const LOGO_SRC: Record<FormatBadgeKind, string> = {
   uhd: '/format-logos/uhd-4k.jpg',
   bluray: '/format-logos/blu-ray.jpg',
   dvd: '/format-logos/dvd.jpg',
+  vhs: '/format-logos/vhs.jpg',
   'dolby-digital': '/format-logos/dolby-digital.jpg',
   'dolby-surround': '/format-logos/dolby-surround.jpg',
   'dolby-atmos': '/format-logos/dolby-atmos.jpg',
   'dolby-truehd': '/format-logos/dolby-truehd.jpg',
   stereo: '/format-logos/stereo.jpg',
+  mono: '/format-logos/mono.svg',
   'dts-x': '/format-logos/dts-x.jpg',
   'dts-hd': '/format-logos/dts-hd.jpg',
   'audio-7-1': '/format-logos/audio-7-1.jpg',
@@ -38,11 +41,13 @@ const LOGO_ALT: Record<FormatBadgeKind, string> = {
   uhd: '4K Ultra HD',
   bluray: 'Blu-ray Disc',
   dvd: 'DVD Video',
+  vhs: 'VHS',
   'dolby-digital': 'Dolby Digital',
   'dolby-surround': 'Dolby Surround',
   'dolby-atmos': 'Dolby Atmos',
   'dolby-truehd': 'Dolby TrueHD',
   stereo: 'Stereo',
+  mono: 'Mono',
   'dts-x': 'DTS:X',
   'dts-hd': 'DTS-HD Master Audio',
   'audio-7-1': '7.1',
@@ -87,12 +92,16 @@ export function classifyDiscFormat(token: string): DiscFormatKind | null {
     return 'dvd'
   }
 
+  if (text === 'vhs' || text.includes('vhs') || text.includes('video cassette')) {
+    return 'vhs'
+  }
+
   return null
 }
 
 /**
  * Which logos to show for a Disc Format cell.
- * UHD/4K supersedes Blu-ray — combo strings like "UHD 4K/Blu-ray" show only 4K.
+ * Combo packs like "UHD 4K; Blu-ray" show both logos.
  */
 export function discFormatKinds(discFormat: string): DiscFormatKind[] {
   const seen = new Set<DiscFormatKind>()
@@ -102,19 +111,13 @@ export function discFormatKinds(discFormat: string): DiscFormatKind[] {
     if (kind) seen.add(kind)
   }
 
-  if (seen.has('uhd')) {
-    seen.delete('bluray')
-  }
-
-  const order: DiscFormatKind[] = ['uhd', 'bluray', 'dvd']
+  const order: DiscFormatKind[] = ['uhd', 'bluray', 'dvd', 'vhs']
   return order.filter((kind) => seen.has(kind))
 }
 
 /**
  * Mid-row audio logos from spreadsheet checkboxes.
- * Dolby Atmos / TrueHD can all appear together (non-exclusive).
- * Exclusive pairs share one slot: DTS:X vs DTS-HD, and 7.1 vs 5.1
- * (prefer the higher-end option if both are somehow checked).
+ * Exclusive pairs share one slot: DTS:X vs DTS-HD, 7.1 vs 5.1, Stereo vs Mono.
  */
 export function audioBadgeKinds(fields: {
   dolbyDigital?: unknown
@@ -122,6 +125,7 @@ export function audioBadgeKinds(fields: {
   dolbyAtmos?: unknown
   dolbyTrueHd?: unknown
   stereo?: unknown
+  mono?: unknown
   dtsX?: unknown
   dtsHd?: unknown
   surround71?: unknown
@@ -132,7 +136,9 @@ export function audioBadgeKinds(fields: {
   if (isBooleanTruthy(fields.dolbySurround)) kinds.push('dolby-surround')
   if (isBooleanTruthy(fields.dolbyAtmos)) kinds.push('dolby-atmos')
   if (isBooleanTruthy(fields.dolbyTrueHd)) kinds.push('dolby-truehd')
+
   if (isBooleanTruthy(fields.stereo)) kinds.push('stereo')
+  else if (isBooleanTruthy(fields.mono)) kinds.push('mono')
 
   if (isBooleanTruthy(fields.dtsX)) kinds.push('dts-x')
   else if (isBooleanTruthy(fields.dtsHd)) kinds.push('dts-hd')
@@ -165,6 +171,7 @@ type DiscFormatBadgesProps = {
   dolbyAtmos?: unknown
   dolbyTrueHd?: unknown
   stereo?: unknown
+  mono?: unknown
   dtsX?: unknown
   dtsHd?: unknown
   surround71?: unknown
@@ -181,6 +188,7 @@ export function DiscFormatBadges({
   dolbyAtmos,
   dolbyTrueHd,
   stereo,
+  mono,
   dtsX,
   dtsHd,
   surround71,
@@ -196,6 +204,7 @@ export function DiscFormatBadges({
     dolbyAtmos,
     dolbyTrueHd,
     stereo,
+    mono,
     dtsX,
     dtsHd,
     surround71,
@@ -213,7 +222,7 @@ export function DiscFormatBadges({
     isBooleanTruthy(dolbySurround) ? 'Dolby Surround' : null,
     isBooleanTruthy(dolbyAtmos) ? 'Dolby Atmos' : null,
     isBooleanTruthy(dolbyTrueHd) ? 'Dolby TrueHD' : null,
-    isBooleanTruthy(stereo) ? 'Stereo' : null,
+    isBooleanTruthy(stereo) ? 'Stereo' : isBooleanTruthy(mono) ? 'Mono' : null,
     isBooleanTruthy(dtsX)
       ? 'DTS:X'
       : isBooleanTruthy(dtsHd)

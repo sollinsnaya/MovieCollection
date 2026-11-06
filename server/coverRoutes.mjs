@@ -5,6 +5,8 @@ import {
   findCoverFiles,
   saveUploadedCover,
 } from './coverUpload.mjs'
+import { refreshMissingCovers } from './coverRefresh.mjs'
+import { TmdbError } from './tmdb/client.mjs'
 
 function sendError(res, error) {
   if (error instanceof CoverUploadError) {
@@ -70,6 +72,27 @@ export function createCoverRouter() {
 
       res.json(result)
     } catch (error) {
+      sendError(res, error)
+    }
+  })
+
+  /** Download posters only for titles that have no local cover (never force). */
+  router.post('/refresh', async (req, res) => {
+    try {
+      const limitRaw = req.body?.limit
+      const limit =
+        limitRaw == null || limitRaw === ''
+          ? null
+          : Number.isFinite(Number(limitRaw))
+            ? Number(limitRaw)
+            : null
+      const summary = await refreshMissingCovers({ limit })
+      res.json(summary)
+    } catch (error) {
+      if (error instanceof TmdbError) {
+        res.status(error.status).json({ error: error.message, code: error.code })
+        return
+      }
       sendError(res, error)
     }
   })

@@ -13,9 +13,27 @@ export const BOOLEAN_FIELDS = [
   '7.1',
   '5.1',
   'Stereo',
+  'Mono',
 ] as const
 
 export type BooleanField = (typeof BOOLEAN_FIELDS)[number]
+
+/** Video / HDR feature checkboxes. */
+export const VIDEO_BOOLEAN_FIELDS = ['HDR10', 'HDR10+', 'Dolby Vision'] as const
+
+/** Audio feature checkboxes. */
+export const AUDIO_BOOLEAN_FIELDS = [
+  'Dolby Atmos',
+  'Dolby True HD',
+  'Dolby Digital',
+  'Dolby Surround',
+  'DTS:X',
+  'DTS-HD  MA',
+  '7.1',
+  '5.1',
+  'Stereo',
+  'Mono',
+] as const
 
 const BOOLEAN_FIELD_SET = new Set<string>(BOOLEAN_FIELDS)
 
@@ -38,4 +56,12 @@ export function booleanToSpreadsheet(checked: boolean): string {
 
 export function booleanFieldsInColumns(columns: string[]): string[] {
   return BOOLEAN_FIELDS.filter((field) => columns.includes(field))
+}
+
+export function videoBooleanFieldsInColumns(columns: string[]): string[] {
+  return VIDEO_BOOLEAN_FIELDS.filter((field) => columns.includes(field))
+}
+
+export function audioBooleanFieldsInColumns(columns: string[]): string[] {
+  return AUDIO_BOOLEAN_FIELDS.filter((field) => columns.includes(field))
 }

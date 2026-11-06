@@ -39,8 +39,10 @@ const MANUAL_FIELDS = new Set([
   '7.1',
   '5.1',
   'Stereo',
+  'Mono',
   'Boutique Label',
   'Rotten Tomatoes Critic Score',
+  'Trailer URL',
   'Notes',
   WIKIPEDIA_FIELD,
 ])
@@ -322,11 +324,6 @@ export function AddMoviePage() {
       </Link>
       <header className="add-movie-page__intro">
         <h1>Add a movie</h1>
-        <p>
-          Look up title details on TMDb (and Wikipedia), review the form, then save to{' '}
-          <code>Master Film List.xlsx</code>. Disc format, edition, HDR flags, and Rotten Tomatoes
-          stay manual.
-        </p>
         {collectionPath ? <p className="add-movie-page__path">{collectionPath}</p> : null}
       </header>
 

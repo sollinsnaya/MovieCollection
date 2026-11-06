@@ -82,3 +82,31 @@ export async function apiAvailable(): Promise<boolean> {
     return false
   }
 }
+
+export async function addSpreadsheetColumn(name: string): Promise<{
+  name: string
+  columns: string[]
+}> {
+  const response = await fetch('/api/columns', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  if (!response.ok) throw new Error(await readError(response))
+  return readJson<{ name: string; columns: string[] }>(response)
+}
+
+export type RefreshShelfResult = {
+  downloaded: number
+  skippedExisting: number
+  noMatch: number
+  missingPoster: number
+  errors: number
+  message: string
+}
+
+export async function refreshShelfCovers(): Promise<RefreshShelfResult> {
+  const response = await fetch('/api/covers/refresh', { method: 'POST' })
+  if (!response.ok) throw new Error(await readError(response))
+  return readJson<RefreshShelfResult>(response)
+}

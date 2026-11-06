@@ -176,20 +176,28 @@
   width: 100%;
 }
 
-.movie-detail__wikipedia {
+.movie-detail__wikipedia,
+.movie-detail__trailer {
   margin: 0;
 }
 
-.movie-detail__wikipedia a {
+.movie-detail__wikipedia a,
+.movie-detail__trailer a {
   color: var(--accent-soft);
   text-decoration: none;
   font-size: 0.95rem;
 }
 
 .movie-detail__wikipedia a:hover,
-.movie-detail__wikipedia a:focus-visible {
+.movie-detail__wikipedia a:focus-visible,
+.movie-detail__trailer a:hover,
+.movie-detail__trailer a:focus-visible {
   color: var(--accent);
   text-decoration: underline;
+}
+
+.movie-detail__trailer {
+  margin-bottom: 0.75rem;
 }
 
 .movie-detail__plot {

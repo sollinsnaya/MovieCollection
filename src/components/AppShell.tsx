@@ -15,6 +15,7 @@ export function AppShell() {
               Collection
             </NavLink>
             <NavLink to="/browse">Browse</NavLink>
+            <NavLink to="/tonight">Tonight</NavLink>
             <NavLink to="/add">Add</NavLink>
             <NavLink to="/help">Help</NavLink>
           </nav>

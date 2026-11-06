@@ -7,7 +7,14 @@ import { MoodPicker } from '../components/MoodPicker'
 import { MovieForm } from '../components/MovieForm'
 import { RottenTomatoesBadge } from '../components/RottenTomatoesBadge'
 import { useMoviesContext } from '../context/MoviesContext'
-import { BOOLEAN_FIELDS, isBooleanField, isBooleanTruthy } from '../lib/booleanFields'
+import {
+  AUDIO_BOOLEAN_FIELDS,
+  BOOLEAN_FIELDS,
+  isBooleanField,
+  isBooleanTruthy,
+  VIDEO_BOOLEAN_FIELDS,
+} from '../lib/booleanFields'
+import { addSpreadsheetColumn } from '../lib/api'
 import { displayValue } from '../lib/normalize'
 import { getMovieById } from '../lib/spreadsheet'
 import { isHttpUrl } from '../lib/wikipediaApi'
@@ -15,8 +22,9 @@ import type { Movie, MovieRecord } from '../types/movie'
 import './MovieDetailPage.css'
 
 const WIKIPEDIA_FIELD = 'Wikipedia Link'
+const TRAILER_FIELD = 'Trailer URL'
 
-const PRIMARY_FIELDS = [
+const HERO_CREDITS_FIELDS = new Set([
   'Catalog ID',
   'Title',
   'Year',
@@ -24,80 +32,62 @@ const PRIMARY_FIELDS = [
   'Runtime (min)',
   'Genre',
   'Studio/Distributor',
+  'Studio/Distributor – researched',
   'Edition',
   'Boutique Label',
   'Franchise',
+  'Franchise/Collection',
   'Rotten Tomatoes Critic Score',
   'Spoiler Free Summary',
-] as const
+  'Spoiler-Free Plot Summary',
+  'Disc Format',
+  WIKIPEDIA_FIELD,
+  TRAILER_FIELD,
+  'Sort Title',
+])
 
 /** Shown above / as special UI — keep out of the Film Credits list when browsing. */
 function isHiddenDetailField(field: string): boolean {
-  return (
-    isBooleanField(field) ||
-    field === 'Disc Format' ||
-    field === WIKIPEDIA_FIELD ||
-    field === 'Title' ||
-    field === 'Year' ||
-    field === 'Rotten Tomatoes Critic Score'
-  )
+  return isBooleanField(field) || HERO_CREDITS_FIELDS.has(field)
 }
 
 function fieldEntries(movie: Movie): Array<[string, string]> {
-  const seen = new Set<string>()
-  const ordered: Array<[string, string]> = []
-
-  for (const key of PRIMARY_FIELDS) {
-    if (key in movie.fields && !isHiddenDetailField(key)) {
-      ordered.push([key, movie.fields[key] ?? ''])
-      seen.add(key)
-    }
-  }
-
-  const remaining = Object.keys(movie.fields)
-    .filter((key) => !seen.has(key) && !isHiddenDetailField(key))
+  return Object.keys(movie.fields)
+    .filter((key) => !isHiddenDetailField(key))
     .sort((a, b) => a.localeCompare(b))
-
-  for (const key of remaining) {
-    ordered.push([key, movie.fields[key] ?? ''])
-  }
-
-  return ordered
+    .map((key) => [key, movie.fields[key] ?? ''])
 }
 
 function displayLabel(field: string): string {
   return field === 'DTS-HD  MA' ? 'DTS-HD MA' : field
 }
 
-/** Boolean fields shown as logos — omit from the Disc & audio features checkbox grid. */
 const BADGE_ONLY_BOOLEAN_FIELDS = new Set([
   'Steelbook',
-  'HDR10',
-  'HDR10+',
-  'Dolby Vision',
-  'Dolby Atmos',
-  'Dolby True HD',
-  'Dolby Digital',
-  'Dolby Surround',
-  'Stereo',
-  'DTS:X',
-  'DTS-HD  MA',
-  '7.1',
-  '5.1',
+  ...VIDEO_BOOLEAN_FIELDS,
+  ...AUDIO_BOOLEAN_FIELDS,
 ])
 
-function BooleanFeaturesReadout({ fields }: { fields: MovieRecord }) {
-  const present = BOOLEAN_FIELDS.filter(
-    (field) => field in fields && !BADGE_ONLY_BOOLEAN_FIELDS.has(field),
+function FeatureReadoutGroup({
+  heading,
+  fields,
+  values,
+}: {
+  heading: string
+  fields: readonly string[]
+  values: MovieRecord
+}) {
+  const present = fields.filter(
+    (field) => field in values && !BADGE_ONLY_BOOLEAN_FIELDS.has(field),
   )
   if (present.length === 0) return null
 
   return (
-    <section className="movie-detail__booleans" aria-labelledby="features-heading">
-      <h2 id="features-heading">Disc &amp; audio features</h2>
+    <section className="movie-detail__booleans" aria-labelledby={`${heading}-heading`}>
+      <h2 id={`${heading}-heading`}>{heading}</h2>
       <ul className="movie-detail__checkbox-grid">
         {present.map((field) => {
-          const checked = isBooleanTruthy(fields[field])
+          const checked = isBooleanTruthy(values[field])
           return (
             <li key={field}>
               <label className="movie-detail__checkbox">
@@ -112,6 +102,26 @@ function BooleanFeaturesReadout({ fields }: { fields: MovieRecord }) {
   )
 }
 
+function BooleanFeaturesReadout({ fields }: { fields: MovieRecord }) {
+  const other = BOOLEAN_FIELDS.filter(
+    (field) =>
+      field in fields &&
+      !BADGE_ONLY_BOOLEAN_FIELDS.has(field) &&
+      !(VIDEO_BOOLEAN_FIELDS as readonly string[]).includes(field) &&
+      !(AUDIO_BOOLEAN_FIELDS as readonly string[]).includes(field),
+  )
+
+  return (
+    <>
+      <FeatureReadoutGroup heading="Video features" fields={VIDEO_BOOLEAN_FIELDS} values={fields} />
+      <FeatureReadoutGroup heading="Audio features" fields={AUDIO_BOOLEAN_FIELDS} values={fields} />
+      {other.length > 0 ? (
+        <FeatureReadoutGroup heading="Other features" fields={other} values={fields} />
+      ) : null}
+    </>
+  )
+}
+
 export function MovieDetailPage() {
   const { catalogId = '' } = useParams()
   const navigate = useNavigate()
@@ -123,6 +133,7 @@ export function MovieDetailPage() {
     canEdit,
     updateMovie,
     deleteMovie,
+    reload,
   } = useMoviesContext()
 
   const movie = status === 'ready' ? getMovieById(movies, catalogId) : undefined
@@ -131,10 +142,15 @@ export function MovieDetailPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [coverRevision, setCoverRevision] = useState(0)
+  const [addingColumn, setAddingColumn] = useState(false)
 
   useEffect(() => {
     if (movie) setValues({ ...movie.fields })
   }, [movie])
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [catalogId])
 
   if (status === 'loading') {
     return (
@@ -166,6 +182,10 @@ export function MovieDetailPage() {
   }
 
   const entries = fieldEntries(movie)
+  const trailerUrl = movie.fields[TRAILER_FIELD] ?? ''
+  const hasTrailer = isHttpUrl(trailerUrl)
+  const wikipediaUrl = movie.fields[WIKIPEDIA_FIELD] ?? ''
+  const hasWikipedia = isHttpUrl(wikipediaUrl)
 
   async function onSave(event: FormEvent) {
     event.preventDefault()
@@ -198,6 +218,22 @@ export function MovieDetailPage() {
     }
   }
 
+  async function onAddColumn() {
+    const name = window.prompt('New spreadsheet column name:')
+    if (!name?.trim()) return
+    setAddingColumn(true)
+    setError(null)
+    try {
+      const result = await addSpreadsheetColumn(name.trim())
+      await reload()
+      setValues((current) => ({ ...current, [result.name]: current[result.name] ?? '' }))
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Could not add column.')
+    } finally {
+      setAddingColumn(false)
+    }
+  }
+
   return (
     <article className="movie-detail">
       <div className="movie-detail__top">
@@ -208,7 +244,7 @@ export function MovieDetailPage() {
           <div className="movie-detail__toolbar">
             {!editing ? (
               <button type="button" onClick={() => setEditing(true)}>
-                Edit spreadsheet row
+                Edit film page
               </button>
             ) : (
               <button type="button" className="movie-detail__ghost" onClick={() => setEditing(false)}>
@@ -228,7 +264,7 @@ export function MovieDetailPage() {
             size="detail"
             revision={coverRevision}
           />
-          {canEdit ? (
+          {canEdit && editing ? (
             <CoverUploader
               title={movie.title}
               year={movie.year}
@@ -254,6 +290,13 @@ export function MovieDetailPage() {
             {[movie.year ?? 'Year unknown', movie.director].filter(Boolean).join(' · ')}
           </p>
           {movie.edition ? <p className="movie-detail__edition">{movie.edition}</p> : null}
+          {hasTrailer ? (
+            <p className="movie-detail__trailer">
+              <a href={trailerUrl} target="_blank" rel="noopener noreferrer">
+                Watch trailer
+              </a>
+            </p>
+          ) : null}
           {movie.plotSummary ||
           movie.fields['Rotten Tomatoes Critic Score'] ||
           movie.discFormat ||
@@ -262,6 +305,7 @@ export function MovieDetailPage() {
           isBooleanTruthy(movie.fields['Dolby Atmos']) ||
           isBooleanTruthy(movie.fields['Dolby True HD']) ||
           isBooleanTruthy(movie.fields.Stereo) ||
+          isBooleanTruthy(movie.fields.Mono) ||
           isBooleanTruthy(movie.fields['DTS:X']) ||
           isBooleanTruthy(movie.fields['DTS-HD  MA']) ||
           isBooleanTruthy(movie.fields['7.1']) ||
@@ -269,15 +313,22 @@ export function MovieDetailPage() {
           isBooleanTruthy(movie.fields['Dolby Vision']) ||
           isBooleanTruthy(movie.fields.HDR10) ||
           isBooleanTruthy(movie.fields['HDR10+']) ||
-          isHttpUrl(movie.fields[WIKIPEDIA_FIELD] ?? '') ? (
+          hasWikipedia ? (
             <div className="movie-detail__plot-block">
-              {movie.plotSummary || movie.fields['Rotten Tomatoes Critic Score'] ? (
+              {movie.plotSummary ? (
+                <p className="movie-detail__plot">{movie.plotSummary}</p>
+              ) : movie.fields['Rotten Tomatoes Critic Score'] || hasWikipedia ? (
+                <p className="movie-detail__plot movie-detail__plot--empty">No synopsis yet.</p>
+              ) : null}
+              {hasWikipedia ? (
+                <p className="movie-detail__wikipedia">
+                  <a href={wikipediaUrl} target="_blank" rel="noopener noreferrer">
+                    Read more on Wikipedia
+                  </a>
+                </p>
+              ) : null}
+              {movie.fields['Rotten Tomatoes Critic Score'] ? (
                 <div className="movie-detail__plot-row">
-                  {movie.plotSummary ? (
-                    <p className="movie-detail__plot">{movie.plotSummary}</p>
-                  ) : (
-                    <p className="movie-detail__plot movie-detail__plot--empty">No synopsis yet.</p>
-                  )}
                   <RottenTomatoesBadge scoreValue={movie.fields['Rotten Tomatoes Critic Score']} />
                 </div>
               ) : null}
@@ -288,6 +339,7 @@ export function MovieDetailPage() {
                 dolbyAtmos={movie.fields['Dolby Atmos']}
                 dolbyTrueHd={movie.fields['Dolby True HD']}
                 stereo={movie.fields.Stereo}
+                mono={movie.fields.Mono}
                 dtsX={movie.fields['DTS:X']}
                 dtsHd={movie.fields['DTS-HD  MA']}
                 surround71={movie.fields['7.1']}
@@ -296,17 +348,6 @@ export function MovieDetailPage() {
                 hdr10={movie.fields.HDR10}
                 hdr10Plus={movie.fields['HDR10+']}
               />
-              {isHttpUrl(movie.fields[WIKIPEDIA_FIELD] ?? '') ? (
-                <p className="movie-detail__wikipedia">
-                  <a
-                    href={movie.fields[WIKIPEDIA_FIELD]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Read more on Wikipedia
-                  </a>
-                </p>
-              ) : null}
             </div>
           ) : null}
         </div>
@@ -316,7 +357,7 @@ export function MovieDetailPage() {
 
       {editing ? (
         <section className="movie-detail__editor" aria-labelledby="edit-heading">
-          <h2 id="edit-heading">Edit spreadsheet fields</h2>
+          <h2 id="edit-heading">Edit film page</h2>
           <form onSubmit={onSave}>
             <MovieForm
               columns={columns}
@@ -338,6 +379,14 @@ export function MovieDetailPage() {
               </button>
               <button
                 type="button"
+                className="movie-detail__ghost"
+                disabled={saving || addingColumn}
+                onClick={() => void onAddColumn()}
+              >
+                {addingColumn ? 'Adding…' : 'Add section'}
+              </button>
+              <button
+                type="button"
                 className="movie-detail__danger"
                 disabled={saving}
                 onClick={() => void onDelete()}
@@ -350,17 +399,19 @@ export function MovieDetailPage() {
       ) : (
         <>
           <BooleanFeaturesReadout fields={movie.fields} />
-          <section className="movie-detail__sheet" aria-labelledby="metadata-heading">
-            <h2 id="metadata-heading">Film Credits</h2>
-            <dl className="movie-detail__fields">
-              {entries.map(([label, value]) => (
-                <div key={label} className="movie-detail__field">
-                  <dt>{label}</dt>
-                  <dd>{displayValue(value)}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
+          {entries.length > 0 ? (
+            <section className="movie-detail__sheet" aria-labelledby="metadata-heading">
+              <h2 id="metadata-heading">Film Credits</h2>
+              <dl className="movie-detail__fields">
+                {entries.map(([label, value]) => (
+                  <div key={label} className="movie-detail__field">
+                    <dt>{label}</dt>
+                    <dd>{displayValue(value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
         </>
       )}
     </article>

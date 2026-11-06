@@ -64,8 +64,6 @@ export function CoverUploader({
     }
   }
 
-  const label = exists ? 'Replace cover' : 'Add cover'
-
   return (
     <div className="cover-uploader">
       <input
@@ -85,12 +83,8 @@ export function CoverUploader({
         disabled={busy || !title.trim()}
         onClick={() => inputRef.current?.click()}
       >
-        {busy ? 'Uploading…' : label}
+        {busy ? 'Uploading…' : 'Add/Replace Cover Art'}
       </button>
-      <p className="cover-uploader__hint">
-        Saves as <code>{title.trim() || 'Title'}{year != null ? ` (${year})` : ''}.jpg</code> in the
-        covers folder. Replacing deletes the previous local image(s) for this title.
-      </p>
       {message ? (
         <p className="cover-uploader__status" role="status">
           {message}
@@ -100,6 +94,9 @@ export function CoverUploader({
         <p className="cover-uploader__error" role="alert">
           {error}
         </p>
+      ) : null}
+      {exists === false ? (
+        <p className="cover-uploader__status">No local cover yet for this title.</p>
       ) : null}
     </div>
   )

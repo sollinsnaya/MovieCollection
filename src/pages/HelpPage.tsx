@@ -1,6 +1,26 @@
+import { useState } from 'react'
+import { refreshShelfCovers } from '../lib/api'
 import './HelpPage.css'
 
 export function HelpPage() {
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshMessage, setRefreshMessage] = useState<string | null>(null)
+  const [refreshError, setRefreshError] = useState<string | null>(null)
+
+  async function onRefreshShelf() {
+    setRefreshing(true)
+    setRefreshError(null)
+    setRefreshMessage(null)
+    try {
+      const result = await refreshShelfCovers()
+      setRefreshMessage(result.message)
+    } catch (error: unknown) {
+      setRefreshError(error instanceof Error ? error.message : 'Could not refresh covers.')
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   return (
     <article className="help-page">
       <header className="help-page__intro">
@@ -72,13 +92,36 @@ export function HelpPage() {
         <ol>
           <li>Open the movie from the Collection.</li>
           <li>
-            Click <strong>Edit spreadsheet row</strong>.
+            Click <strong>Edit film page</strong>.
           </li>
           <li>Change any fields you need, then click <strong>Save changes</strong>.</li>
+          <li>
+            Cover art can be added or replaced with <strong>Add/Replace Cover Art</strong> while
+            editing.
+          </li>
           <li>
             To remove a title, use <strong>Delete from spreadsheet</strong> while editing.
           </li>
         </ol>
+      </section>
+
+      <section className="help-page__section" aria-labelledby="refresh-shelf">
+        <h2 id="refresh-shelf">Refresh shelf</h2>
+        <p>
+          Download missing cover art for titles that do not already have a local image. Existing
+          covers (including ones you uploaded or corrected by hand) are never overwritten.
+        </p>
+        <button type="button" onClick={() => void onRefreshShelf()} disabled={refreshing}>
+          {refreshing ? 'Refreshing shelf…' : 'Refresh shelf'}
+        </button>
+        {refreshMessage ? (
+          <p className="help-page__callout" role="status">
+            {refreshMessage}
+          </p>
+        ) : null}
+        {refreshError ? (
+          <p role="alert">{refreshError}</p>
+        ) : null}
       </section>
 
       <section className="help-page__section" aria-labelledby="update-covers">
@@ -96,12 +139,13 @@ export function HelpPage() {
           exists, it is left alone unless you use <strong>Retry poster download</strong>.
         </p>
 
-        <h3>Option B — Upload from the movie page</h3>
+        <h3>Option B — Upload while editing a film</h3>
         <p>
-          Open any title and use <strong>Add cover</strong> or <strong>Replace cover</strong> under
-          the artwork. Choose a JPEG, PNG, or WebP from your device. Shelf saves it as{' '}
-          <code>Title (Year).jpg</code> in <code>public/covers/</code>. Replacing a cover deletes the
-          previous local image file(s) for that title.
+          Open any title, click <strong>Edit film page</strong>, then use{' '}
+          <strong>Add/Replace Cover Art</strong> under the artwork. Choose a JPEG, PNG, or WebP from
+          your device. Shelf saves it as <code>Title (Year).jpg</code> in{' '}
+          <code>public/covers/</code>. Replacing a cover deletes the previous local image file(s)
+          for that title.
         </p>
 
         <h3>Option C — One cover from the server (API)</h3>
